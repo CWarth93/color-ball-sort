@@ -34,12 +34,10 @@ Color Ball Sort is a fast browser puzzle game sample built with Next.js, React, 
 - As a player, I want to see my remaining time, completed levels, score, and moves so that I can understand my performance during the sprint.
 - As a player, I want completed levels to advance instantly while the global timer keeps running so that the game feels continuous and competitive.
 - As a player, I want a final results screen after two minutes so that I can review my completed levels, score, and total moves.
-- As a returning player, I want my best score to be saved so that I have a clear target to beat in later sessions.
 - As a competitive player, I want leaderboard data stored in MongoDB so that scores can be compared across real submitted sessions.
 - As a mobile player, I want responsive touch controls and readable jar spacing so that the game works comfortably on phones.
 - As a desktop player, I want mouse controls and a stable centered game layout so that the same game feels polished in a browser.
 - As a player, I want sound and motion settings to persist so that the game respects my preferences between sessions.
-- As a developer reviewing the project, I want the game deployed on Vercel so that I can open and test the production version quickly.
 
 ## Scripts
 
