@@ -1,8 +1,11 @@
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { PageShell } from '../components/PageShell';
+
+const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
 
 const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 4;
@@ -230,6 +233,7 @@ export default function HomePage() {
 							</p>
 						)}
 						<section className="gameBoard" data-testid="game-board" data-level={level} aria-label="Color Ball Sort board">
+							<PhaserBoard jars={jars} selectedJar={selectedJar} onJarSelect={selectJar} motionEnabled={motionEnabled} />
 							{jars.map((jar, jarIndex) => (
 								<button
 									className="gameJar"

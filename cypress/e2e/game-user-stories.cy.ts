@@ -40,6 +40,7 @@ describe('Color Ball Sort user stories', () => {
 		cy.get(selectors.completedLevels).should('contain.text', '0');
 		cy.get(selectors.score).should('contain.text', '0');
 		cy.get(selectors.moves).should('contain.text', '0');
+		cy.get(selectors.gameBoard).find('canvas').should('be.visible');
 	});
 
 	it('generates a small level with five colors, six jars, and one empty helper jar', () => {
