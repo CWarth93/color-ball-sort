@@ -44,7 +44,7 @@ const isLevelSolved = (jars: string[][]) =>
 export default function HomePage() {
 	const [hasStarted, setHasStarted] = useState(false);
 	const [jars, setJars] = useState(createLevel);
-	const [selectedJar, setSelectedJar] = useState<number | null>(null);
+	const [dragSourceJar, setDragSourceJar] = useState<number | null>(null);
 	const [moves, setMoves] = useState(0);
 	const [level, setLevel] = useState(1);
 	const [completedLevels, setCompletedLevels] = useState(0);
@@ -75,32 +75,33 @@ export default function HomePage() {
 		return () => window.clearInterval(timer);
 	}, [hasStarted]);
 
-	const selectJar = (jarIndex: number) => {
-		if (selectedJar === null) {
-			if (jars[jarIndex].length > 0) {
-				setSelectedJar(jarIndex);
-			}
+	const startBallDrag = (jarIndex: number, ballIndex: number) => {
+		if (ballIndex !== jars[jarIndex].length - 1) {
 			return;
 		}
 
-		if (selectedJar === jarIndex) {
-			setSelectedJar(null);
+		setDragSourceJar(jarIndex);
+	};
+
+	const dropBall = (targetJar: number) => {
+		if (dragSourceJar === null || dragSourceJar === targetJar) {
+			setDragSourceJar(null);
 			return;
 		}
 
-		if (jars[jarIndex].length >= jarCapacity) {
+		if (jars[targetJar].length >= jarCapacity) {
 			return;
 		}
 
 		setJars((currentJars) => {
 			const nextJars = currentJars.map((jar) => [...jar]);
-			const movingBall = nextJars[selectedJar].pop();
+			const movingBall = nextJars[dragSourceJar].pop();
 
 			if (!movingBall) {
 				return currentJars;
 			}
 
-			nextJars[jarIndex].push(movingBall);
+			nextJars[targetJar].push(movingBall);
 			if (isLevelSolved(nextJars)) {
 				const nextLevel = level + 1;
 
@@ -113,7 +114,7 @@ export default function HomePage() {
 			return nextJars;
 		});
 		setMoves((currentMoves) => currentMoves + 1);
-		setSelectedJar(null);
+		setDragSourceJar(null);
 	};
 
 	const toggleSound = () => {
@@ -248,23 +249,30 @@ export default function HomePage() {
 							</p>
 						)}
 						<section className="gameBoard" data-testid="game-board" data-level={level} aria-label="Color Ball Sort board">
-							<PhaserBoard jars={jars} selectedJar={selectedJar} onJarSelect={selectJar} motionEnabled={motionEnabled} />
+							<PhaserBoard jars={jars} activeJar={dragSourceJar} motionEnabled={motionEnabled} />
 							{jars.map((jar, jarIndex) => (
 								<button
 									className="gameJar"
 									type="button"
 									data-testid={`jar-${jarIndex}`}
 									data-empty={jar.length === 0 ? 'true' : 'false'}
-									data-selected={selectedJar === jarIndex ? 'true' : 'false'}
+									data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
 									key={`jar-${jarIndex}`}
 									aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
-									onClick={() => selectJar(jarIndex)}
+									onPointerUp={() => dropBall(jarIndex)}
 								>
 									{jar.map((color, ballIndex) => (
 										<span
 											className="gameBall"
 											data-testid="ball"
 											data-color={color}
+											data-top={ballIndex === jar.length - 1 ? 'true' : 'false'}
+											draggable={ballIndex === jar.length - 1}
+											onDragStart={(event) => {
+												event.preventDefault();
+												startBallDrag(jarIndex, ballIndex);
+											}}
+											onPointerDown={() => startBallDrag(jarIndex, ballIndex)}
 											style={{ backgroundColor: color }}
 											key={`${color}-${jarIndex}-${ballIndex}`}
 										/>

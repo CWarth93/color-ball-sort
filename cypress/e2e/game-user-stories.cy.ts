@@ -39,6 +39,14 @@ const readBoardSignature = () =>
 			[...jars].map((jar) => [...jar.querySelectorAll('[data-testid="ball"]')].map((ball) => ball.getAttribute('data-color')).join(',')).join('|')
 		);
 
+const dragTopBallToJar = (sourceJar: number, targetJar: number) => {
+	cy.get(selectors.jar(sourceJar))
+		.find(`${selectors.ball}[data-top="true"]`)
+		.trigger('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
+	cy.get(selectors.jar(targetJar)).trigger('pointermove', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
+	cy.get(selectors.jar(targetJar)).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0 });
+};
+
 describe('Color Ball Sort user stories', () => {
 	it('lets a player start a two-minute sprint immediately', () => {
 		startSprint({ useClock: true });
@@ -69,8 +77,7 @@ describe('Color Ball Sort user stories', () => {
 		cy.get(selectors.jar(1)).find(selectors.ball).last().as('topBall');
 		cy.get('@topBall').invoke('attr', 'data-color').as('movedColor');
 
-		cy.get(selectors.jar(1)).click();
-		cy.get(selectors.jar(5)).click();
+		dragTopBallToJar(1, 5);
 
 		cy.get<string>('@movedColor').then((movedColor) => {
 			cy.get(selectors.jar(5)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
@@ -85,8 +92,7 @@ describe('Color Ball Sort user stories', () => {
 		cy.get(selectors.timer).should('contain.text', '01:48');
 
 		readBoardSignature().then((initialSignature) => {
-			cy.get(selectors.jar(0)).click();
-			cy.get(selectors.jar(5)).click();
+			dragTopBallToJar(0, 5);
 			cy.get(selectors.levelComplete).should('be.visible');
 			cy.get(selectors.completedLevels).should('contain.text', '1');
 			cy.get(selectors.timer).should('contain.text', '01:48');
@@ -141,8 +147,7 @@ describe('Color Ball Sort user stories', () => {
 			expect(rect.height).to.be.greaterThan(120);
 		});
 
-		cy.get(selectors.jar(0)).click();
-		cy.get(selectors.jar(5)).click();
+		dragTopBallToJar(0, 5);
 		cy.get(selectors.moves).should('contain.text', '1');
 	});
 
