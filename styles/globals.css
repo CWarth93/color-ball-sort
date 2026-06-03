@@ -194,6 +194,16 @@ h1 {
 	font-size: 1.35rem;
 }
 
+.levelComplete {
+	margin: 0;
+	padding: 0.75rem 1rem;
+	border: 1px solid rgba(101, 212, 110, 0.42);
+	border-radius: 8px;
+	background: rgba(101, 212, 110, 0.12);
+	color: #d9ffdd;
+	font-weight: 800;
+}
+
 .gameBoard {
 	display: grid;
 	grid-template-columns: repeat(6, minmax(0, 1fr));

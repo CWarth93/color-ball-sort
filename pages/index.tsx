@@ -1,19 +1,53 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { PageShell } from '../components/PageShell';
 
 const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 4;
+const sprintSeconds = 120;
 
 const createLevel = () => [...colors.map((color) => [color, color, color]), []];
+
+const formatTime = (seconds: number) => {
+	const minutes = Math.floor(seconds / 60);
+	const remainingSeconds = seconds % 60;
+
+	return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const isLevelSolved = (jars: string[][]) =>
+	jars.every((jar) => {
+		if (jar.length === 0) {
+			return true;
+		}
+
+		return jar.every((color) => color === jar[0]);
+	});
 
 export default function HomePage() {
 	const [hasStarted, setHasStarted] = useState(false);
 	const [jars, setJars] = useState(createLevel);
 	const [selectedJar, setSelectedJar] = useState<number | null>(null);
 	const [moves, setMoves] = useState(0);
+	const [level, setLevel] = useState(1);
+	const [completedLevels, setCompletedLevels] = useState(0);
+	const [score, setScore] = useState(0);
+	const [secondsLeft, setSecondsLeft] = useState(sprintSeconds);
+	const [showLevelComplete, setShowLevelComplete] = useState(false);
+
+	useEffect(() => {
+		if (!hasStarted || secondsLeft <= 0) {
+			return undefined;
+		}
+
+		const timer = window.setInterval(() => {
+			setSecondsLeft((currentSeconds) => Math.max(0, currentSeconds - 1));
+		}, 1000);
+
+		return () => window.clearInterval(timer);
+	}, [hasStarted, secondsLeft]);
 
 	const selectJar = (jarIndex: number) => {
 		if (selectedJar === null) {
@@ -41,6 +75,12 @@ export default function HomePage() {
 			}
 
 			nextJars[jarIndex].push(movingBall);
+			if (isLevelSolved(nextJars)) {
+				setCompletedLevels((currentCompletedLevels) => currentCompletedLevels + 1);
+				setScore((currentScore) => currentScore + 100);
+				setLevel((currentLevel) => currentLevel + 1);
+				setShowLevelComplete(true);
+			}
 			return nextJars;
 		});
 		setMoves((currentMoves) => currentMoves + 1);
@@ -59,22 +99,27 @@ export default function HomePage() {
 						<section className="gameHud" aria-label="Sprint stats">
 							<div>
 								<span>Time</span>
-								<strong data-testid="timer">02:00</strong>
+								<strong data-testid="timer">{formatTime(secondsLeft)}</strong>
 							</div>
 							<div>
 								<span>Levels</span>
-								<strong data-testid="completed-levels">0</strong>
+								<strong data-testid="completed-levels">{completedLevels}</strong>
 							</div>
 							<div>
 								<span>Score</span>
-								<strong data-testid="score">0</strong>
+								<strong data-testid="score">{score}</strong>
 							</div>
 							<div>
 								<span>Moves</span>
 								<strong data-testid="moves">{moves}</strong>
 							</div>
 						</section>
-						<section className="gameBoard" data-testid="game-board" data-level="1" aria-label="Color Ball Sort board">
+						{showLevelComplete && (
+							<p className="levelComplete" data-testid="level-complete">
+								Level complete
+							</p>
+						)}
+						<section className="gameBoard" data-testid="game-board" data-level={level} aria-label="Color Ball Sort board">
 							{jars.map((jar, jarIndex) => (
 								<button
 									className="gameJar"
