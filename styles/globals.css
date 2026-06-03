@@ -119,6 +119,42 @@ h1 {
 	color: #f6f2ea;
 }
 
+.secondaryButton {
+	border: 1px solid rgba(246, 242, 234, 0.25);
+	border-radius: 8px;
+	padding: 0.65rem 0.85rem;
+	background: transparent;
+	color: #f6f2ea;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.settingsBar {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	max-width: 1120px;
+	margin: 0 auto;
+}
+
+.settingsPanel {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.settingsPanel button {
+	border: 1px solid rgba(246, 242, 234, 0.2);
+	border-radius: 8px;
+	padding: 0.65rem 0.85rem;
+	background: rgba(255, 255, 255, 0.06);
+	color: #f6f2ea;
+	cursor: pointer;
+}
+
+.settingsPanel button[aria-pressed='false'] {
+	color: #9fa9ad;
+}
+
 .jarPreview {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -332,6 +368,12 @@ h1 {
 		grid-template-columns: 1fr;
 		gap: 2rem;
 		padding: 2rem 0;
+	}
+
+	.settingsBar,
+	.settingsPanel {
+		flex-wrap: wrap;
+		justify-content: flex-start;
 	}
 
 	.jarPreview {

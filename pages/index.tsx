@@ -38,7 +38,15 @@ export default function HomePage() {
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
 	const [playerName, setPlayerName] = useState('');
 	const [leaderboardStatus, setLeaderboardStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [soundEnabled, setSoundEnabled] = useState(true);
+	const [motionEnabled, setMotionEnabled] = useState(true);
 	const isFinished = hasStarted && secondsLeft === 0;
+
+	useEffect(() => {
+		setSoundEnabled(window.localStorage.getItem('sound-enabled') !== 'false');
+		setMotionEnabled(window.localStorage.getItem('motion-enabled') !== 'false');
+	}, []);
 
 	useEffect(() => {
 		if (!hasStarted) {
@@ -90,6 +98,22 @@ export default function HomePage() {
 		setSelectedJar(null);
 	};
 
+	const toggleSound = () => {
+		setSoundEnabled((currentValue) => {
+			const nextValue = !currentValue;
+			window.localStorage.setItem('sound-enabled', String(nextValue));
+			return nextValue;
+		});
+	};
+
+	const toggleMotion = () => {
+		setMotionEnabled((currentValue) => {
+			const nextValue = !currentValue;
+			window.localStorage.setItem('motion-enabled', String(nextValue));
+			return nextValue;
+		});
+	};
+
 	const submitLeaderboardScore = async () => {
 		setLeaderboardStatus('saving');
 		try {
@@ -123,6 +147,21 @@ export default function HomePage() {
 				<meta name="description" content="A fast two-minute color ball sorting game built with Next.js, TypeScript, React, and Phaser." />
 			</Head>
 			<PageShell>
+				<div className="settingsBar">
+					<button className="secondaryButton" data-testid="settings" type="button" onClick={() => setSettingsOpen((currentValue) => !currentValue)}>
+						Settings
+					</button>
+					{settingsOpen && (
+						<div className="settingsPanel" aria-label="Settings">
+							<button data-testid="sound-toggle" type="button" aria-pressed={soundEnabled} onClick={toggleSound}>
+								Sound {soundEnabled ? 'On' : 'Off'}
+							</button>
+							<button data-testid="motion-toggle" type="button" aria-pressed={motionEnabled} onClick={toggleMotion}>
+								Motion {motionEnabled ? 'On' : 'Off'}
+							</button>
+						</div>
+					)}
+				</div>
 				{isFinished ? (
 					<main className="resultsScreen" data-testid="results">
 						<p className="eyebrow">Sprint complete</p>
