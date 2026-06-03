@@ -5,12 +5,47 @@ import { useState } from 'react';
 import { PageShell } from '../components/PageShell';
 
 const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
+const jarCapacity = 4;
 
 const createLevel = () => [...colors.map((color) => [color, color, color]), []];
 
 export default function HomePage() {
 	const [hasStarted, setHasStarted] = useState(false);
-	const [jars] = useState(createLevel);
+	const [jars, setJars] = useState(createLevel);
+	const [selectedJar, setSelectedJar] = useState<number | null>(null);
+	const [moves, setMoves] = useState(0);
+
+	const selectJar = (jarIndex: number) => {
+		if (selectedJar === null) {
+			if (jars[jarIndex].length > 0) {
+				setSelectedJar(jarIndex);
+			}
+			return;
+		}
+
+		if (selectedJar === jarIndex) {
+			setSelectedJar(null);
+			return;
+		}
+
+		if (jars[jarIndex].length >= jarCapacity) {
+			return;
+		}
+
+		setJars((currentJars) => {
+			const nextJars = currentJars.map((jar) => [...jar]);
+			const movingBall = nextJars[selectedJar].pop();
+
+			if (!movingBall) {
+				return currentJars;
+			}
+
+			nextJars[jarIndex].push(movingBall);
+			return nextJars;
+		});
+		setMoves((currentMoves) => currentMoves + 1);
+		setSelectedJar(null);
+	};
 
 	return (
 		<>
@@ -36,7 +71,7 @@ export default function HomePage() {
 							</div>
 							<div>
 								<span>Moves</span>
-								<strong data-testid="moves">0</strong>
+								<strong data-testid="moves">{moves}</strong>
 							</div>
 						</section>
 						<section className="gameBoard" data-testid="game-board" data-level="1" aria-label="Color Ball Sort board">
@@ -46,8 +81,10 @@ export default function HomePage() {
 									type="button"
 									data-testid={`jar-${jarIndex}`}
 									data-empty={jar.length === 0 ? 'true' : 'false'}
+									data-selected={selectedJar === jarIndex ? 'true' : 'false'}
 									key={`jar-${jarIndex}`}
 									aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
+									onClick={() => selectJar(jarIndex)}
 								>
 									{jar.map((color, ballIndex) => (
 										<span

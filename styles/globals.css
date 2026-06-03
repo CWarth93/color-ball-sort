@@ -222,6 +222,11 @@ h1 {
 	cursor: pointer;
 }
 
+.gameJar[data-selected='true'] {
+	border-color: #ff5a6f;
+	transform: translateY(-0.35rem);
+}
+
 .gameBall {
 	display: block;
 	width: min(80%, 4.4rem);
