@@ -4,8 +4,13 @@ import { useState } from 'react';
 
 import { PageShell } from '../components/PageShell';
 
+const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
+
+const createLevel = () => [...colors.map((color) => [color, color, color]), []];
+
 export default function HomePage() {
 	const [hasStarted, setHasStarted] = useState(false);
+	const [jars] = useState(createLevel);
 
 	return (
 		<>
@@ -34,7 +39,28 @@ export default function HomePage() {
 								<strong data-testid="moves">0</strong>
 							</div>
 						</section>
-						<section className="gameBoard" data-testid="game-board" data-level="1" aria-label="Color Ball Sort board" />
+						<section className="gameBoard" data-testid="game-board" data-level="1" aria-label="Color Ball Sort board">
+							{jars.map((jar, jarIndex) => (
+								<button
+									className="gameJar"
+									type="button"
+									data-testid={`jar-${jarIndex}`}
+									data-empty={jar.length === 0 ? 'true' : 'false'}
+									key={`jar-${jarIndex}`}
+									aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
+								>
+									{jar.map((color, ballIndex) => (
+										<span
+											className="gameBall"
+											data-testid="ball"
+											data-color={color}
+											style={{ backgroundColor: color }}
+											key={`${color}-${jarIndex}-${ballIndex}`}
+										/>
+									))}
+								</button>
+							))}
+						</section>
 					</main>
 				) : (
 					<section className="hero" aria-labelledby="page-title">
