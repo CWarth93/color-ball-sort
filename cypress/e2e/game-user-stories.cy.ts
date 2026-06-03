@@ -19,16 +19,18 @@ const selectors = {
 	submitScore: '[data-testid="submit-score"]',
 };
 
-const startSprint = () => {
+const startSprint = ({ useClock = false }: { useClock?: boolean } = {}) => {
 	cy.visit('/');
+	if (useClock) {
+		cy.clock();
+	}
 	cy.get(selectors.startSprint).click();
 	cy.get(selectors.gameBoard).should('be.visible');
 };
 
 describe('Color Ball Sort user stories', () => {
 	it('lets a player start a two-minute sprint immediately', () => {
-		cy.clock();
-		startSprint();
+		startSprint({ useClock: true });
 
 		cy.get(selectors.timer).should('contain.text', '02:00');
 		cy.get(selectors.completedLevels).should('contain.text', '0');
@@ -65,8 +67,7 @@ describe('Color Ball Sort user stories', () => {
 	});
 
 	it('keeps the global timer running when a completed level advances instantly', () => {
-		cy.clock();
-		startSprint();
+		startSprint({ useClock: true });
 
 		cy.tick(12_000);
 		cy.get(selectors.timer).should('contain.text', '01:48');
@@ -80,8 +81,7 @@ describe('Color Ball Sort user stories', () => {
 	});
 
 	it('shows final results after two minutes', () => {
-		cy.clock();
-		startSprint();
+		startSprint({ useClock: true });
 
 		cy.tick(120_000);
 
@@ -92,7 +92,6 @@ describe('Color Ball Sort user stories', () => {
 	});
 
 	it('submits leaderboard data for a completed sprint', () => {
-		cy.clock();
 		cy.intercept('POST', '/api/leaderboard', {
 			statusCode: 201,
 			body: {
@@ -100,7 +99,7 @@ describe('Color Ball Sort user stories', () => {
 			},
 		}).as('submitLeaderboard');
 
-		startSprint();
+		startSprint({ useClock: true });
 		cy.tick(120_000);
 		cy.get(selectors.leaderboardName).type('Ada');
 		cy.get(selectors.submitScore).click();
