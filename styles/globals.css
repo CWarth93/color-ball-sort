@@ -284,6 +284,8 @@ h1 {
 	grid-template-columns: repeat(6, minmax(0, 1fr));
 	align-items: end;
 	gap: 1rem;
+	width: 100%;
+	max-width: 920px;
 	min-height: 28rem;
 	padding: 1.25rem;
 	border: 1px solid rgba(246, 242, 234, 0.14);
