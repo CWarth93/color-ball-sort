@@ -1,0 +1,46 @@
+{
+	"name": "color-ball-sort",
+	"version": "0.1.0",
+	"author": "CWarth93",
+	"private": true,
+	"engines": {
+		"node": ">=20.0.0",
+		"npm": ">=9.0.0"
+	},
+	"scripts": {
+		"setup": "npm install && husky install",
+		"dev": "next dev",
+		"run": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"typecheck": "tsc --noEmit",
+		"style:check": "prettier --single-quote --use-tabs --arrow-parens always --quote-props consistent --print-width 160 --check \"**/*.{ts,tsx,css,html,json,md}\"",
+		"style:fix": "prettier --single-quote --use-tabs --arrow-parens always --quote-props consistent --print-width 160 --write \"**/*.{ts,tsx,css,html,json,md}\"",
+		"lint:check": "eslint . --ext .ts,.tsx",
+		"lint:fix": "eslint . --ext .ts,.tsx --fix",
+		"test": "cypress run"
+	},
+	"dependencies": {
+		"next": "^16.2.7",
+		"phaser": "^4.1.0",
+		"react": "^19.2.7",
+		"react-dom": "^19.2.7"
+	},
+	"overrides": {
+		"postcss": "^8.5.15"
+	},
+	"devDependencies": {
+		"@types/node": "^22.19.19",
+		"@types/react": "^19.2.16",
+		"@types/react-dom": "^19.2.3",
+		"@typescript-eslint/eslint-plugin": "^8.47.0",
+		"@typescript-eslint/parser": "^8.47.0",
+		"cypress": "^15.16.0",
+		"eslint": "^8.57.1",
+		"eslint-config-next": "^15.0.0",
+		"husky": "^8.0.2",
+		"postcss": "^8.5.15",
+		"prettier": "^2.0.2",
+		"typescript": "^5.9.3"
+	}
+}

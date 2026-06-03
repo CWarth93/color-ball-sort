@@ -1,0 +1,7 @@
+/.vscode
+/node_modules
+/.env
+/.next
+/tsconfig.tsbuildinfo
+/cypress/screenshots
+/cypress/videos
