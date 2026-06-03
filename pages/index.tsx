@@ -36,9 +36,10 @@ export default function HomePage() {
 	const [score, setScore] = useState(0);
 	const [secondsLeft, setSecondsLeft] = useState(sprintSeconds);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
+	const isFinished = hasStarted && secondsLeft === 0;
 
 	useEffect(() => {
-		if (!hasStarted || secondsLeft <= 0) {
+		if (!hasStarted) {
 			return undefined;
 		}
 
@@ -47,7 +48,7 @@ export default function HomePage() {
 		}, 1000);
 
 		return () => window.clearInterval(timer);
-	}, [hasStarted, secondsLeft]);
+	}, [hasStarted]);
 
 	const selectJar = (jarIndex: number) => {
 		if (selectedJar === null) {
@@ -94,7 +95,26 @@ export default function HomePage() {
 				<meta name="description" content="A fast two-minute color ball sorting game built with Next.js, TypeScript, React, and Phaser." />
 			</Head>
 			<PageShell>
-				{hasStarted ? (
+				{isFinished ? (
+					<main className="resultsScreen" data-testid="results">
+						<p className="eyebrow">Sprint complete</p>
+						<h1>Results</h1>
+						<div className="resultGrid">
+							<div>
+								<span>Levels</span>
+								<strong data-testid="final-levels">{completedLevels}</strong>
+							</div>
+							<div>
+								<span>Score</span>
+								<strong data-testid="final-score">{score}</strong>
+							</div>
+							<div>
+								<span>Moves</span>
+								<strong data-testid="final-moves">{moves}</strong>
+							</div>
+						</div>
+					</main>
+				) : hasStarted ? (
 					<main className="gameScreen">
 						<section className="gameHud" aria-label="Sprint stats">
 							<div>
