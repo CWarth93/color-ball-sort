@@ -24,6 +24,10 @@ const startSprint = ({ useClock = false }: { useClock?: boolean } = {}) => {
 	if (useClock) {
 		cy.clock();
 	}
+	cy.window().should((win) => {
+		expect(win.document.readyState).to.equal('complete');
+	});
+	cy.wait(500);
 	cy.get(selectors.startSprint).click();
 	cy.get(selectors.gameBoard).should('be.visible');
 };
