@@ -227,6 +227,48 @@ h1 {
 	font-size: 2rem;
 }
 
+.leaderboardForm {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.leaderboardForm label {
+	color: #9fa9ad;
+	font-size: 0.75rem;
+	font-weight: 800;
+	text-transform: uppercase;
+}
+
+.leaderboardForm div {
+	display: flex;
+	gap: 0.75rem;
+}
+
+.leaderboardForm input {
+	min-width: 0;
+	flex: 1;
+	border: 1px solid rgba(246, 242, 234, 0.2);
+	border-radius: 8px;
+	padding: 0.8rem 0.9rem;
+	background: rgba(255, 255, 255, 0.08);
+	color: #f6f2ea;
+}
+
+.leaderboardForm button {
+	border: 0;
+	border-radius: 8px;
+	padding: 0.8rem 1rem;
+	background: #49c6e5;
+	color: #061115;
+	font-weight: 800;
+	cursor: pointer;
+}
+
+.leaderboardForm button:disabled {
+	cursor: default;
+	opacity: 0.55;
+}
+
 .levelComplete {
 	margin: 0;
 	padding: 0.75rem 1rem;
@@ -305,6 +347,10 @@ h1 {
 
 	.resultGrid {
 		grid-template-columns: 1fr;
+	}
+
+	.leaderboardForm div {
+		flex-direction: column;
 	}
 
 	.gameBoard {

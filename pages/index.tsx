@@ -36,6 +36,8 @@ export default function HomePage() {
 	const [score, setScore] = useState(0);
 	const [secondsLeft, setSecondsLeft] = useState(sprintSeconds);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
+	const [playerName, setPlayerName] = useState('');
+	const [leaderboardStatus, setLeaderboardStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 	const isFinished = hasStarted && secondsLeft === 0;
 
 	useEffect(() => {
@@ -88,6 +90,32 @@ export default function HomePage() {
 		setSelectedJar(null);
 	};
 
+	const submitLeaderboardScore = async () => {
+		setLeaderboardStatus('saving');
+		try {
+			const response = await fetch('/api/leaderboard', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					playerName,
+					score,
+					completedLevels,
+					moves,
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error('Leaderboard submission failed.');
+			}
+
+			setLeaderboardStatus('saved');
+		} catch {
+			setLeaderboardStatus('error');
+		}
+	};
+
 	return (
 		<>
 			<Head>
@@ -113,6 +141,29 @@ export default function HomePage() {
 								<strong data-testid="final-moves">{moves}</strong>
 							</div>
 						</div>
+						<form
+							className="leaderboardForm"
+							onSubmit={(event) => {
+								event.preventDefault();
+								submitLeaderboardScore();
+							}}
+						>
+							<label htmlFor="leaderboard-name">Name</label>
+							<div>
+								<input
+									id="leaderboard-name"
+									data-testid="leaderboard-name"
+									value={playerName}
+									onChange={(event) => setPlayerName(event.target.value)}
+									placeholder="Your name"
+								/>
+								<button data-testid="submit-score" type="submit" disabled={leaderboardStatus === 'saving' || playerName.trim().length === 0}>
+									Submit score
+								</button>
+							</div>
+							{leaderboardStatus === 'saved' && <p>Score submitted.</p>}
+							{leaderboardStatus === 'error' && <p>Score could not be submitted.</p>}
+						</form>
 					</main>
 				) : hasStarted ? (
 					<main className="gameScreen">

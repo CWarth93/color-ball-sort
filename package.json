@@ -21,6 +21,7 @@
 		"test": "cypress run"
 	},
 	"dependencies": {
+		"mongodb": "^7.2.0",
 		"next": "^16.2.7",
 		"phaser": "^4.1.0",
 		"react": "^19.2.7",
