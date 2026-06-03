@@ -11,7 +11,19 @@ const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 4;
 const sprintSeconds = 120;
 
-const createLevel = () => [...colors.map((color) => [color, color, color]), []];
+const createLevel = (levelNumber = 1) => {
+	const offset = (levelNumber - 1) % colors.length;
+	const levelColors = colors.map((_, index) => colors[(index + offset) % colors.length]);
+
+	return [
+		[levelColors[1], levelColors[1], levelColors[0]],
+		[levelColors[0], levelColors[0]],
+		[levelColors[2], levelColors[2], levelColors[2]],
+		[levelColors[3], levelColors[3], levelColors[3]],
+		[levelColors[4], levelColors[4], levelColors[4]],
+		[],
+	];
+};
 
 const formatTime = (seconds: number) => {
 	const minutes = Math.floor(seconds / 60);
@@ -90,10 +102,13 @@ export default function HomePage() {
 
 			nextJars[jarIndex].push(movingBall);
 			if (isLevelSolved(nextJars)) {
+				const nextLevel = level + 1;
+
 				setCompletedLevels((currentCompletedLevels) => currentCompletedLevels + 1);
 				setScore((currentScore) => currentScore + 100);
-				setLevel((currentLevel) => currentLevel + 1);
+				setLevel(nextLevel);
 				setShowLevelComplete(true);
+				return createLevel(nextLevel);
 			}
 			return nextJars;
 		});

@@ -32,6 +32,13 @@ const startSprint = ({ useClock = false }: { useClock?: boolean } = {}) => {
 	cy.get(selectors.gameBoard).should('be.visible');
 };
 
+const readBoardSignature = () =>
+	cy
+		.get('[data-testid^="jar-"]')
+		.then((jars) =>
+			[...jars].map((jar) => [...jar.querySelectorAll('[data-testid="ball"]')].map((ball) => ball.getAttribute('data-color')).join(',')).join('|')
+		);
+
 describe('Color Ball Sort user stories', () => {
 	it('lets a player start a two-minute sprint immediately', () => {
 		startSprint({ useClock: true });
@@ -59,10 +66,10 @@ describe('Color Ball Sort user stories', () => {
 	it('moves the top ball to any jar with free space', () => {
 		startSprint();
 
-		cy.get(selectors.jar(0)).find(selectors.ball).last().as('topBall');
+		cy.get(selectors.jar(1)).find(selectors.ball).last().as('topBall');
 		cy.get('@topBall').invoke('attr', 'data-color').as('movedColor');
 
-		cy.get(selectors.jar(0)).click();
+		cy.get(selectors.jar(1)).click();
 		cy.get(selectors.jar(5)).click();
 
 		cy.get<string>('@movedColor').then((movedColor) => {
@@ -77,12 +84,17 @@ describe('Color Ball Sort user stories', () => {
 		cy.tick(12_000);
 		cy.get(selectors.timer).should('contain.text', '01:48');
 
-		cy.get(selectors.jar(0)).click();
-		cy.get(selectors.jar(5)).click();
-		cy.get(selectors.levelComplete).should('be.visible');
-		cy.get(selectors.completedLevels).should('contain.text', '1');
-		cy.get(selectors.timer).should('contain.text', '01:48');
-		cy.get(selectors.gameBoard).should('have.attr', 'data-level', '2');
+		readBoardSignature().then((initialSignature) => {
+			cy.get(selectors.jar(0)).click();
+			cy.get(selectors.jar(5)).click();
+			cy.get(selectors.levelComplete).should('be.visible');
+			cy.get(selectors.completedLevels).should('contain.text', '1');
+			cy.get(selectors.timer).should('contain.text', '01:48');
+			cy.get(selectors.gameBoard).should('have.attr', 'data-level', '2');
+			readBoardSignature().should((nextSignature) => {
+				expect(nextSignature).not.to.equal(initialSignature);
+			});
+		});
 	});
 
 	it('shows final results after two minutes', () => {
