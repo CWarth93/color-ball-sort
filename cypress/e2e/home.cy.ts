@@ -19,6 +19,10 @@ describe('home page', () => {
 
 	it('keeps the selected theme on the imprint page', () => {
 		cy.visit('/');
+		cy.window().then((win) => {
+			win.localStorage.removeItem('color-ball-sort-theme');
+		});
+		cy.reload();
 		cy.get('[data-testid="theme-barbie"]').click();
 		cy.get('html').should('have.attr', 'data-theme', 'barbie');
 		cy.contains('a', 'Imprint').click();
