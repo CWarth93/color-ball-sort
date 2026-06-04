@@ -286,6 +286,7 @@ h1 {
 	inset: 1.25rem;
 	z-index: 20;
 	display: grid;
+	align-content: center;
 	place-items: center;
 	gap: 0.9rem;
 	border-radius: 8px;

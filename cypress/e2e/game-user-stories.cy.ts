@@ -122,6 +122,16 @@ describe('Color Ball Sort endless game', () => {
 		cy.visit('/');
 		cy.get(selectors.gameBoard).should('be.visible').and('have.attr', 'data-ready', 'false');
 		cy.get(selectors.levelLoading).should('be.visible').and('contain.text', 'Loading level');
+		cy.get(selectors.gameBoard).then(($board) => {
+			const boardRect = $board[0].getBoundingClientRect();
+
+			cy.get(selectors.levelLoading).then(($loading) => {
+				const loadingRect = $loading[0].getBoundingClientRect();
+				const loadingCenterY = loadingRect.top + loadingRect.height / 2;
+
+				expect(loadingCenterY).to.be.closeTo(boardRect.top + boardRect.height / 2, 12);
+			});
+		});
 		cy.get(selectors.movesLoading).should('contain.text', 'Moves loading');
 		cy.get(selectors.movesUsed).should('not.exist');
 		cy.get(selectors.movesMax).should('not.exist');
