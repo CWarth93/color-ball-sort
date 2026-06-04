@@ -12,7 +12,17 @@ const selectors = {
 	levelLoading: '[data-testid="level-loading"]',
 	vaporwaveTheme: '[data-testid="theme-vaporwave"]',
 	cyberpunkTheme: '[data-testid="theme-cyberpunk"]',
+	lofiTheme: '[data-testid="theme-lofi"]',
+	poolcoreTheme: '[data-testid="theme-poolcore"]',
+	fruitigerAeroTheme: '[data-testid="theme-fruitiger-aero"]',
 };
+
+const themeOptions = [
+	{ id: 'cyberpunk', selector: selectors.cyberpunkTheme },
+	{ id: 'lofi', selector: selectors.lofiTheme },
+	{ id: 'poolcore', selector: selectors.poolcoreTheme },
+	{ id: 'fruitiger-aero', selector: selectors.fruitigerAeroTheme },
+];
 
 const startGame = () => {
 	cy.visit('/');
@@ -175,34 +185,49 @@ describe('Color Ball Sort endless game', () => {
 		cy.contains('Pick your theme').should('be.visible');
 		cy.get(selectors.vaporwaveTheme).should('be.visible').and('have.attr', 'aria-pressed', 'true');
 		cy.get(selectors.vaporwaveTheme).find('img').should('have.attr', 'src').and('include', '/themes/vaporwave/theme-icon.png');
-		cy.get(selectors.cyberpunkTheme).should('be.visible').and('have.attr', 'aria-pressed', 'false');
+		themeOptions.forEach((theme) => {
+			cy.get(theme.selector).should('be.visible').and('have.attr', 'aria-pressed', 'false');
+			cy.get(theme.selector).find('img').should('have.attr', 'src').and('include', `/themes/${theme.id}/theme-icon.png`);
+		});
 	});
 
-	it('switches to the cyberpunk theme', () => {
+	themeOptions.forEach((theme) => {
+		it(`switches to the ${theme.id} theme`, () => {
+			startGame();
+
+			cy.get(theme.selector).click();
+			cy.get(theme.selector).should('have.attr', 'aria-pressed', 'true');
+			cy.get(selectors.vaporwaveTheme).should('have.attr', 'aria-pressed', 'false');
+			cy.get(theme.selector).find('img').should('have.attr', 'src').and('include', `/themes/${theme.id}/theme-icon.png`);
+
+			findAvailableMove().then(({ sourceJar }) => {
+				cy.get(selectors.jar(sourceJar))
+					.find(`${selectors.ball}[data-top="true"]`)
+					.then(($ball) => {
+						const rect = $ball[0].getBoundingClientRect();
+
+						cy.wrap($ball).trigger('pointerdown', {
+							pointerId: 1,
+							pointerType: 'mouse',
+							button: 0,
+							buttons: 1,
+							clientX: rect.left + rect.width / 2,
+							clientY: rect.top + rect.height / 2,
+						});
+					});
+			});
+			cy.get('.dragGhost').find('img').should('have.attr', 'src').and('include', `/themes/${theme.id}/`);
+		});
+	});
+
+	it('switches back to vaporwave after another theme', () => {
 		startGame();
 
 		cy.get(selectors.cyberpunkTheme).click();
 		cy.get(selectors.cyberpunkTheme).should('have.attr', 'aria-pressed', 'true');
-		cy.get(selectors.vaporwaveTheme).should('have.attr', 'aria-pressed', 'false');
-		cy.get(selectors.cyberpunkTheme).find('img').should('have.attr', 'src').and('include', '/themes/cyberpunk/theme-icon.png');
-
-		findAvailableMove().then(({ sourceJar }) => {
-			cy.get(selectors.jar(sourceJar))
-				.find(`${selectors.ball}[data-top="true"]`)
-				.then(($ball) => {
-					const rect = $ball[0].getBoundingClientRect();
-
-					cy.wrap($ball).trigger('pointerdown', {
-						pointerId: 1,
-						pointerType: 'mouse',
-						button: 0,
-						buttons: 1,
-						clientX: rect.left + rect.width / 2,
-						clientY: rect.top + rect.height / 2,
-					});
-				});
-		});
-		cy.get('.dragGhost').find('img').should('have.attr', 'src').and('include', '/themes/cyberpunk/');
+		cy.get(selectors.vaporwaveTheme).click();
+		cy.get(selectors.vaporwaveTheme).should('have.attr', 'aria-pressed', 'true');
+		cy.get(selectors.cyberpunkTheme).should('have.attr', 'aria-pressed', 'false');
 	});
 
 	it('generates a randomized level with five colors, six jars, and three free slots', () => {

@@ -71,6 +71,76 @@ html[data-theme='cyberpunk'] {
 	--theme-shadow: 0 0.9rem 2.6rem rgba(245, 255, 61, 0.2), 0 0 2.8rem rgba(0, 245, 255, 0.2);
 }
 
+html[data-theme='lofi'] {
+	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Georgia, 'Times New Roman', serif;
+	--page-bg: radial-gradient(circle at 16% 18%, rgba(248, 214, 122, 0.28), transparent 12rem),
+		radial-gradient(circle at 82% 14%, rgba(158, 197, 171, 0.24), transparent 16rem),
+		linear-gradient(180deg, rgba(247, 197, 159, 0.09) 0 1px, transparent 1px 3.5rem),
+		linear-gradient(90deg, rgba(158, 197, 171, 0.08) 0 1px, transparent 1px 3.5rem), linear-gradient(180deg, #211b2d 0%, #2f263d 48%, #171322 100%);
+	--page-text: #fff2d8;
+	--muted-text: #d7c0a9;
+	--accent: #9ec5ab;
+	--accent-strong: #f8d67a;
+	--panel-bg: linear-gradient(180deg, rgba(247, 197, 159, 0.18), rgba(158, 197, 171, 0.1)), rgba(33, 27, 45, 0.92);
+	--board-bg: #211b2d;
+	--panel-border: rgba(247, 197, 159, 0.72);
+	--control-bg: rgba(47, 38, 61, 0.82);
+	--control-border: rgba(158, 197, 171, 0.52);
+	--button-bg: rgba(242, 166, 90, 0.15);
+	--button-border: rgba(247, 197, 159, 0.58);
+	--success-bg: rgba(33, 27, 45, 0.82);
+	--success-text: #fff2d8;
+	--success-border: rgba(248, 214, 122, 0.78);
+	--theme-shadow: 0 0.9rem 2.5rem rgba(11, 8, 18, 0.38), 0 0 2rem rgba(248, 214, 122, 0.16);
+}
+
+html[data-theme='poolcore'] {
+	--font-main: 'Verdana', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
+	--page-bg: linear-gradient(rgba(255, 255, 255, 0.46) 2px, transparent 2px), linear-gradient(90deg, rgba(255, 255, 255, 0.46) 2px, transparent 2px),
+		radial-gradient(circle at 18% 20%, rgba(255, 127, 110, 0.32), transparent 14rem),
+		radial-gradient(circle at 82% 16%, rgba(0, 180, 216, 0.28), transparent 16rem), linear-gradient(180deg, #8eeaff 0%, #d7fbff 50%, #6fcfea 100%);
+	--page-text: #005f86;
+	--muted-text: #0077b6;
+	--accent: #00b4d8;
+	--accent-strong: #ff7f6e;
+	--panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(142, 234, 255, 0.28)), rgba(229, 251, 255, 0.88);
+	--board-bg: #e5fbff;
+	--panel-border: rgba(0, 119, 182, 0.76);
+	--control-bg: rgba(229, 251, 255, 0.8);
+	--control-border: rgba(0, 119, 182, 0.52);
+	--button-bg: rgba(255, 127, 110, 0.16);
+	--button-border: rgba(0, 119, 182, 0.54);
+	--success-bg: rgba(229, 251, 255, 0.78);
+	--success-text: #005f86;
+	--success-border: rgba(255, 127, 110, 0.72);
+	--theme-shadow: 0 0.9rem 2.4rem rgba(0, 119, 182, 0.22), 0 0 2.2rem rgba(255, 255, 255, 0.42);
+}
+
+html[data-theme='fruitiger-aero'] {
+	--font-main: 'Segoe UI', Verdana, ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--page-bg: radial-gradient(circle at 20% 16%, rgba(255, 255, 255, 0.9), transparent 9rem),
+		radial-gradient(circle at 78% 18%, rgba(143, 217, 79, 0.38), transparent 15rem),
+		radial-gradient(circle at 54% 86%, rgba(28, 145, 209, 0.28), transparent 18rem), linear-gradient(180deg, #bff7ff 0%, #f3fff9 42%, #87dff4 100%);
+	--page-text: #0d6f9f;
+	--muted-text: #24785d;
+	--accent: #2aa86b;
+	--accent-strong: #1c91d1;
+	--panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(191, 247, 255, 0.42)), rgba(238, 252, 255, 0.9);
+	--board-bg: #dff9ff;
+	--panel-border: rgba(42, 168, 107, 0.76);
+	--control-bg: rgba(255, 255, 255, 0.68);
+	--control-border: rgba(28, 145, 209, 0.48);
+	--button-bg: rgba(143, 217, 79, 0.18);
+	--button-border: rgba(42, 168, 107, 0.5);
+	--success-bg: rgba(238, 252, 255, 0.82);
+	--success-text: #0d6f9f;
+	--success-border: rgba(28, 145, 209, 0.72);
+	--theme-shadow: 0 0.9rem 2.5rem rgba(28, 145, 209, 0.18), 0 0 2.3rem rgba(255, 255, 255, 0.62);
+}
+
 * {
 	box-sizing: border-box;
 }

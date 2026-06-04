@@ -305,7 +305,6 @@ export default function HomePage() {
 									hoverJar={hoverJar}
 									onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)}
 									theme={activeTheme}
-									key={activeTheme.id}
 								/>
 								{jars.map((jar, jarIndex) => (
 									<button
