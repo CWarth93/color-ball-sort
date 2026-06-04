@@ -83,19 +83,20 @@ export default function HomePage() {
 		setDragSourceJar(jarIndex);
 	};
 
-	const dropBall = (targetJar: number) => {
-		if (dragSourceJar === null || dragSourceJar === targetJar) {
+	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
+		if (sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
 			return;
 		}
 
 		if (jars[targetJar].length >= jarCapacity) {
+			setDragSourceJar(null);
 			return;
 		}
 
 		setJars((currentJars) => {
 			const nextJars = currentJars.map((jar) => [...jar]);
-			const movingBall = nextJars[dragSourceJar].pop();
+			const movingBall = nextJars[sourceJar].pop();
 
 			if (!movingBall) {
 				return currentJars;
@@ -248,8 +249,23 @@ export default function HomePage() {
 								Level complete
 							</p>
 						)}
-						<section className="gameBoard" data-testid="game-board" data-level={level} aria-label="Color Ball Sort board">
-							<PhaserBoard jars={jars} activeJar={dragSourceJar} onBallDrop={dropBall} motionEnabled={motionEnabled} />
+						<section
+							className="gameBoard"
+							data-testid="game-board"
+							data-level={level}
+							aria-label="Color Ball Sort board"
+							onPointerUp={(event) => {
+								if (event.target === event.currentTarget) {
+									setDragSourceJar(null);
+								}
+							}}
+						>
+							<PhaserBoard
+								jars={jars}
+								activeJar={dragSourceJar}
+								onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)}
+								motionEnabled={motionEnabled}
+							/>
 							{jars.map((jar, jarIndex) => (
 								<button
 									className="gameJar"

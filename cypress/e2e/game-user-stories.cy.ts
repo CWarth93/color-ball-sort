@@ -21,13 +21,13 @@ const selectors = {
 
 const startSprint = ({ useClock = false }: { useClock?: boolean } = {}) => {
 	cy.visit('/');
-	if (useClock) {
-		cy.clock();
-	}
 	cy.window().should((win) => {
 		expect(win.document.readyState).to.equal('complete');
 	});
 	cy.wait(500);
+	if (useClock) {
+		cy.clock();
+	}
 	cy.get(selectors.startSprint).click();
 	cy.get(selectors.gameBoard).should('be.visible');
 };
@@ -83,6 +83,22 @@ describe('Color Ball Sort user stories', () => {
 			cy.get(selectors.jar(5)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
 		});
 		cy.get(selectors.moves).should('contain.text', '1');
+	});
+
+	it('reverts a dragged ball when it is dropped outside a jar', () => {
+		startSprint();
+
+		readBoardSignature().as('initialSignature');
+		cy.get(selectors.jar(1)).find(`${selectors.ball}[data-top="true"]`).trigger('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
+		cy.get(selectors.gameBoard).trigger('pointermove', 8, 8, { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
+		cy.get(selectors.gameBoard).trigger('pointerup', 8, 8, { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0 });
+
+		cy.get<string>('@initialSignature').then((initialSignature) => {
+			readBoardSignature().should((nextSignature) => {
+				expect(nextSignature).to.equal(initialSignature);
+			});
+		});
+		cy.get(selectors.moves).should('contain.text', '0');
 	});
 
 	it('keeps the global timer running when a completed level advances instantly', () => {
