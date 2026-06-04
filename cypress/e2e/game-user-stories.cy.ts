@@ -83,7 +83,7 @@ describe('Color Ball Sort endless game', () => {
 		startGame();
 
 		cy.contains('Endless puzzle').should('not.exist');
-		cy.contains('h1', 'Color Ball Sort').should('not.exist');
+		cy.contains('h1', 'Color Ball Sort').should('be.visible');
 		cy.contains('Level 1').should('not.exist');
 		cy.get('[data-testid="settings"]').should('not.exist');
 		cy.get('[data-testid="start-sprint"]').should('not.exist');
@@ -231,20 +231,26 @@ describe('Color Ball Sort endless game', () => {
 			const boardCenter = rect.left + rect.width / 2;
 
 			expect(boardCenter).to.be.closeTo(720, 80);
-			expect(rect.width).to.be.greaterThan(1320);
+			expect(rect.width).to.be.greaterThan(880);
+			expect(rect.width).to.be.lessThan(1020);
 		});
 	});
 
-	it('keeps the board as the dominant full-screen surface', () => {
+	it('keeps the desktop board visually balanced below the title', () => {
 		cy.viewport(1440, 900);
 		startGame();
 
+		cy.contains('h1', 'Color Ball Sort').then(($title) => {
+			const titleRect = $title[0].getBoundingClientRect();
+
+			expect(titleRect.top).to.be.lessThan(40);
+		});
 		cy.get(selectors.gameBoard).then(($board) => {
 			const rect = $board[0].getBoundingClientRect();
 
-			expect(rect.width).to.be.greaterThan(1320);
-			expect(rect.height).to.be.greaterThan(650);
-			expect(rect.top).to.be.lessThan(20);
+			expect(rect.width).to.be.greaterThan(880);
+			expect(rect.width).to.be.lessThan(1020);
+			expect(rect.top).to.be.greaterThan(80);
 		});
 	});
 });

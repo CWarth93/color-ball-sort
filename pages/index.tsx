@@ -209,6 +209,7 @@ export default function HomePage() {
 				<meta name="description" content="An endless color ball sorting puzzle built with Next.js, TypeScript, React, and Phaser." />
 			</Head>
 			<main className="gameScreen">
+				<h1 className="gameTitle">Color Ball Sort</h1>
 				<div className="gameStage">
 					<section
 						className="gameBoard"
