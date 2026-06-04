@@ -300,5 +300,33 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, the
 		scene.renderBoard?.();
 	}, [jars, activeJar, hoverJar, onBallDrop, theme]);
 
+	useEffect(() => {
+		let frameId: number | null = null;
+		let attempts = 0;
+
+		const repaintTheme = () => {
+			const scene = sceneRef.current;
+
+			if (scene) {
+				scene.themeState = theme;
+				scene.renderBoard?.();
+				return;
+			}
+
+			if (attempts < 60) {
+				attempts += 1;
+				frameId = window.requestAnimationFrame(repaintTheme);
+			}
+		};
+
+		repaintTheme();
+
+		return () => {
+			if (frameId !== null) {
+				window.cancelAnimationFrame(frameId);
+			}
+		};
+	}, [theme]);
+
 	return <div className="phaserBoard" ref={containerRef} aria-hidden="true" />;
 }
