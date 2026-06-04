@@ -45,6 +45,7 @@ const loadRandomStoredLevel = async () => {
 
 export default function HomePage() {
 	const [jars, setJars] = useState<string[][]>([]);
+	const [initialJars, setInitialJars] = useState<string[][]>([]);
 	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
 	const [moveBudget, setMoveBudget] = useState(0);
 	const [movesUsed, setMovesUsed] = useState(0);
@@ -69,11 +70,16 @@ export default function HomePage() {
 	const loadNextLevel = async () => {
 		setBoardReady(false);
 		const nextLevel = await loadRandomStoredLevel();
+		const loadedJars = cloneJars(nextLevel.jars);
 
-		setJars(nextLevel.jars);
+		setJars(loadedJars);
+		setInitialJars(cloneJars(loadedJars));
 		setMoveBudget(nextLevel.minimumTurns);
 		setMovesUsed(0);
 		setTurnHistory([]);
+		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
 		setBoardReady(true);
 	};
 
@@ -181,6 +187,28 @@ export default function HomePage() {
 		setDragState(null);
 	};
 
+	const resetLevel = () => {
+		if (!boardReady || showLevelComplete || initialJars.length === 0) {
+			return;
+		}
+
+		setJars(cloneJars(initialJars));
+		setTurnHistory([]);
+		setMovesUsed(0);
+		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
+	};
+
+	const skipLevel = () => {
+		if (!boardReady || showLevelComplete) {
+			return;
+		}
+
+		setLevel((currentLevel) => currentLevel + 1);
+		void loadNextLevel();
+	};
+
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
 		if (!boardReady || showLevelComplete || isMoveLimitBlocking || sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
@@ -228,16 +256,24 @@ export default function HomePage() {
 				<h1 className="gameTitle">Color Ball Sort</h1>
 				<div className="gameStage">
 					<div className="gameControls">
-						<button
-							className="undoButton"
-							data-testid="undo-turn"
-							type="button"
-							data-highlighted={isMoveLimitBlocking ? 'true' : 'false'}
-							disabled={!boardReady || turnHistory.length === 0 || showLevelComplete}
-							onClick={undoTurn}
-						>
-							Undo
-						</button>
+						<div className="actionCluster" aria-label="Level actions">
+							<button className="actionButton" data-testid="reset-level" type="button" disabled={!boardReady || showLevelComplete} onClick={resetLevel}>
+								Reset
+							</button>
+							<button
+								className="actionButton undoButton"
+								data-testid="undo-turn"
+								type="button"
+								data-highlighted={isMoveLimitBlocking ? 'true' : 'false'}
+								disabled={!boardReady || turnHistory.length === 0 || showLevelComplete}
+								onClick={undoTurn}
+							>
+								Undo
+							</button>
+							<button className="actionButton" data-testid="skip-level" type="button" disabled={!boardReady || showLevelComplete} onClick={skipLevel}>
+								Skip
+							</button>
+						</div>
 						<div className="moveHud" data-blocked={isMoveLimitBlocking ? 'true' : 'false'} aria-label="Move counter">
 							{boardReady ? (
 								<>

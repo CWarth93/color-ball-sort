@@ -181,6 +181,12 @@ h1 {
 	margin-bottom: 0.7rem;
 }
 
+.actionCluster {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
 .moveHud {
 	display: flex;
 	align-items: center;
@@ -208,7 +214,7 @@ h1 {
 	color: var(--accent-strong);
 }
 
-.undoButton {
+.actionButton {
 	border: 1px solid var(--button-border);
 	border-radius: 8px;
 	padding: 0.35rem 0.6rem;
@@ -218,7 +224,7 @@ h1 {
 	cursor: pointer;
 }
 
-.undoButton:disabled {
+.actionButton:disabled {
 	cursor: default;
 	opacity: 0.45;
 }
@@ -577,7 +583,11 @@ h1 {
 		font-size: 0.82rem;
 	}
 
-	.undoButton {
+	.actionCluster {
+		gap: 0.35rem;
+	}
+
+	.actionButton {
 		padding: 0.3rem 0.45rem;
 	}
 

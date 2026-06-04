@@ -6,7 +6,9 @@ const selectors = {
 	movesUsed: '[data-testid="moves-used"]',
 	movesMax: '[data-testid="moves-max"]',
 	movesLoading: '[data-testid="moves-loading"]',
+	resetLevel: '[data-testid="reset-level"]',
 	undoTurn: '[data-testid="undo-turn"]',
+	skipLevel: '[data-testid="skip-level"]',
 	levelLoading: '[data-testid="level-loading"]',
 	vaporwaveTheme: '[data-testid="theme-vaporwave"]',
 	cyberpunkTheme: '[data-testid="theme-cyberpunk"]',
@@ -161,7 +163,9 @@ describe('Color Ball Sort endless game', () => {
 		cy.get(selectors.movesUsed).should('contain.text', '0');
 		cy.get(selectors.movesMax).invoke('text').then(Number).should('be.greaterThan', 0);
 		cy.get(selectors.movesMax).parent().should('not.contain.text', 'Moves');
+		cy.get(selectors.resetLevel).should('not.be.disabled');
 		cy.get(selectors.undoTurn).should('be.disabled');
+		cy.get(selectors.skipLevel).should('not.be.disabled');
 		cy.get(selectors.gameBoard).find('canvas').should('be.visible');
 	});
 
@@ -263,6 +267,63 @@ describe('Color Ball Sort endless game', () => {
 		cy.get<string>('@initialSignature').then((initialSignature) => {
 			readBoardSignature().should((nextSignature) => {
 				expect(nextSignature).to.equal(initialSignature);
+			});
+		});
+	});
+
+	it('resets the current level back to its initial layout', () => {
+		startGame();
+		readBoardSignature().as('initialSignature');
+
+		findAvailableMove().then(({ sourceJar, targetJar }) => {
+			dragTopBallToJar(sourceJar, targetJar);
+		});
+		cy.get(selectors.movesUsed).should('contain.text', '1');
+		cy.get(selectors.resetLevel).click();
+		cy.get(selectors.movesUsed).should('contain.text', '0');
+		cy.get(selectors.undoTurn).should('be.disabled');
+
+		cy.get<string>('@initialSignature').then((initialSignature) => {
+			readBoardSignature().should((nextSignature) => {
+				expect(nextSignature).to.equal(initialSignature);
+			});
+		});
+	});
+
+	it('skips to a freshly loaded next level', () => {
+		startGame();
+		readBoardSignature().as('initialSignature');
+
+		cy.intercept('GET', '/api/levels/random', {
+			delayMs: 250,
+			body: {
+				level: {
+					key: 'test-skipped-level',
+					difficulty: 'medium',
+					minimumTurns: 12,
+					fastPathCount: 12,
+					jars: [
+						['#ff5a6f', '#ffd166', '#49c6e5'],
+						['#ffd166', '#49c6e5', '#65d46e'],
+						['#49c6e5', '#65d46e', '#a78bfa'],
+						['#65d46e', '#a78bfa', '#ff5a6f'],
+						['#a78bfa', '#ff5a6f', '#ffd166'],
+						[],
+					],
+					jarCapacity: 3,
+					ballsPerColor: 3,
+					colors: ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'],
+				},
+			},
+		}).as('loadSkippedLevel');
+		cy.get(selectors.skipLevel).click();
+		cy.wait('@loadSkippedLevel');
+		cy.get(selectors.gameBoard).should('have.attr', 'data-ready', 'true');
+		cy.get(selectors.movesUsed).should('contain.text', '0');
+		cy.get(selectors.undoTurn).should('be.disabled');
+		cy.get<string>('@initialSignature').then((initialSignature) => {
+			readBoardSignature().should((nextSignature) => {
+				expect(nextSignature).not.to.equal(initialSignature);
 			});
 		});
 	});
@@ -439,18 +500,33 @@ describe('Color Ball Sort endless game', () => {
 		});
 	});
 
-	it('positions undo and move counter on the game top corners', () => {
+	it('positions level actions and move counter on the game top corners', () => {
 		cy.viewport(1440, 900);
 		startGame();
 
 		cy.get(selectors.gameBoard).then(($board) => {
 			const boardRect = $board[0].getBoundingClientRect();
 
+			cy.get(selectors.resetLevel).then(($resetButton) => {
+				const resetRect = $resetButton[0].getBoundingClientRect();
+
+				expect(resetRect.left).to.be.closeTo(boardRect.left, 4);
+				expect(resetRect.top).to.be.lessThan(boardRect.top);
+			});
 			cy.get(selectors.undoTurn).then(($undoButton) => {
 				const undoRect = $undoButton[0].getBoundingClientRect();
 
-				expect(undoRect.left).to.be.closeTo(boardRect.left, 4);
 				expect(undoRect.top).to.be.lessThan(boardRect.top);
+			});
+			cy.get(selectors.skipLevel).then(($skipButton) => {
+				const skipRect = $skipButton[0].getBoundingClientRect();
+
+				cy.get(selectors.undoTurn).then(($undoButton) => {
+					const undoRect = $undoButton[0].getBoundingClientRect();
+
+					expect(skipRect.left).to.be.greaterThan(undoRect.right);
+					expect(skipRect.top).to.be.lessThan(boardRect.top);
+				});
 			});
 			cy.get(selectors.movesMax)
 				.parent()
