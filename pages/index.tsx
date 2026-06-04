@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
 
 import { PageShell } from '../components/PageShell';
@@ -41,10 +42,19 @@ const isLevelSolved = (jars: string[][]) =>
 		return jar.every((color) => color === jar[0]);
 	});
 
+type DragState = {
+	sourceJar: number;
+	color: string;
+	x: number;
+	y: number;
+};
+
 export default function HomePage() {
 	const [hasStarted, setHasStarted] = useState(false);
 	const [jars, setJars] = useState(createLevel);
 	const [dragSourceJar, setDragSourceJar] = useState<number | null>(null);
+	const [hoverJar, setHoverJar] = useState<number | null>(null);
+	const [dragState, setDragState] = useState<DragState | null>(null);
 	const [moves, setMoves] = useState(0);
 	const [level, setLevel] = useState(1);
 	const [completedLevels, setCompletedLevels] = useState(0);
@@ -75,22 +85,93 @@ export default function HomePage() {
 		return () => window.clearInterval(timer);
 	}, [hasStarted]);
 
-	const startBallDrag = (jarIndex: number, ballIndex: number) => {
+	useEffect(() => {
+		if (!dragState) {
+			return undefined;
+		}
+
+		const getHoveredJar = (clientX: number, clientY: number) => {
+			const element = document.elementFromPoint(clientX, clientY);
+			const jarElement = element?.closest<HTMLElement>('[data-jar-index]');
+			const jarIndex = jarElement?.dataset.jarIndex;
+
+			return jarIndex === undefined ? null : Number(jarIndex);
+		};
+		const moveDrag = (event: globalThis.PointerEvent) => {
+			setDragState((currentDragState) => (currentDragState ? { ...currentDragState, x: event.clientX, y: event.clientY } : currentDragState));
+			setHoverJar(getHoveredJar(event.clientX, event.clientY));
+		};
+		const endDrag = (event: globalThis.PointerEvent) => {
+			const targetJar = getHoveredJar(event.clientX, event.clientY);
+
+			if (targetJar !== null) {
+				dropBall(targetJar, dragState.sourceJar);
+			} else {
+				setDragSourceJar(null);
+			}
+			setHoverJar(null);
+			setDragState(null);
+		};
+
+		window.addEventListener('pointermove', moveDrag);
+		window.addEventListener('pointerup', endDrag);
+
+		return () => {
+			window.removeEventListener('pointermove', moveDrag);
+			window.removeEventListener('pointerup', endDrag);
+		};
+	}, [dragState, jars]);
+
+	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
 		if (ballIndex !== jars[jarIndex].length - 1) {
 			return;
 		}
 
+		event.preventDefault();
+		try {
+			event.currentTarget.setPointerCapture(event.pointerId);
+		} catch {
+			// Synthetic pointer events in tests do not always create an active capture target.
+		}
 		setDragSourceJar(jarIndex);
+		setHoverJar(jarIndex);
+		setDragState({
+			sourceJar: jarIndex,
+			color: jars[jarIndex][ballIndex],
+			x: event.clientX,
+			y: event.clientY,
+		});
+	};
+
+	const moveDragOverJar = (jarIndex: number) => {
+		if (!dragState) {
+			return;
+		}
+
+		setHoverJar(jarIndex);
+	};
+
+	const endDragOverJar = (event: ReactPointerEvent, jarIndex: number) => {
+		if (!dragState) {
+			return;
+		}
+
+		event.stopPropagation();
+		dropBall(jarIndex, dragState.sourceJar);
 	};
 
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
 		if (sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
+			setHoverJar(null);
+			setDragState(null);
 			return;
 		}
 
 		if (jars[targetJar].length >= jarCapacity) {
 			setDragSourceJar(null);
+			setHoverJar(null);
+			setDragState(null);
 			return;
 		}
 
@@ -116,6 +197,8 @@ export default function HomePage() {
 		});
 		setMoves((currentMoves) => currentMoves + 1);
 		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
 	};
 
 	const toggleSound = () => {
@@ -263,6 +346,7 @@ export default function HomePage() {
 							<PhaserBoard
 								jars={jars}
 								activeJar={dragSourceJar}
+								hoverJar={hoverJar}
 								onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)}
 								motionEnabled={motionEnabled}
 							/>
@@ -271,11 +355,16 @@ export default function HomePage() {
 									className="gameJar"
 									type="button"
 									data-testid={`jar-${jarIndex}`}
+									data-jar-index={jarIndex}
 									data-empty={jar.length === 0 ? 'true' : 'false'}
 									data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
+									data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
 									key={`jar-${jarIndex}`}
 									aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
-									onPointerUp={() => dropBall(jarIndex)}
+									onPointerEnter={() => setHoverJar(jarIndex)}
+									onPointerMove={() => moveDragOverJar(jarIndex)}
+									onPointerLeave={() => setHoverJar((currentHoverJar) => (currentHoverJar === jarIndex ? null : currentHoverJar))}
+									onPointerUp={(event) => endDragOverJar(event, jarIndex)}
 								>
 									{jar.map((color, ballIndex) => (
 										<span
@@ -286,15 +375,15 @@ export default function HomePage() {
 											draggable={ballIndex === jar.length - 1}
 											onDragStart={(event) => {
 												event.preventDefault();
-												startBallDrag(jarIndex, ballIndex);
 											}}
-											onPointerDown={() => startBallDrag(jarIndex, ballIndex)}
+											onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
 											style={{ backgroundColor: color }}
 											key={`${color}-${jarIndex}-${ballIndex}`}
 										/>
 									))}
 								</button>
 							))}
+							{dragState && <span className="dragGhost" style={{ backgroundColor: dragState.color, left: dragState.x, top: dragState.y }} aria-hidden="true" />}
 						</section>
 					</main>
 				) : (

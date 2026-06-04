@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 type PhaserBoardProps = {
 	jars: string[][];
 	activeJar: number | null;
+	hoverJar: number | null;
 	onBallDrop: (sourceJar: number, targetJar: number) => void;
 	motionEnabled: boolean;
 };
@@ -13,6 +14,7 @@ type SceneInstance = import('phaser').Scene & {
 	renderBoard?: () => void;
 	jarsState?: string[][];
 	activeJarState?: number | null;
+	hoverJarState?: number | null;
 	onBallDropState?: (sourceJar: number, targetJar: number) => void;
 	motionEnabledState?: boolean;
 };
@@ -21,7 +23,7 @@ const boardWidth = 920;
 const boardHeight = 448;
 const jarCapacity = 4;
 
-export default function PhaserBoard({ jars, activeJar, onBallDrop, motionEnabled }: PhaserBoardProps) {
+export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, motionEnabled }: PhaserBoardProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const gameRef = useRef<GameInstance | null>(null);
 	const sceneRef = useRef<SceneInstance | null>(null);
@@ -43,9 +45,9 @@ export default function PhaserBoard({ jars, activeJar, onBallDrop, motionEnabled
 			class BoardScene extends Phaser.Scene {
 				jarsState = jars;
 				activeJarState = activeJar;
+				hoverJarState = hoverJar;
 				onBallDropState = onBallDrop;
 				motionEnabledState = motionEnabled;
-				hoverJarState: number | null = null;
 				dragSourceJarState: number | null = null;
 				jarContainers = new Map<number, Phaser.GameObjects.Container>();
 				jarShapes = new Map<number, Phaser.GameObjects.Graphics>();
@@ -143,24 +145,29 @@ export default function PhaserBoard({ jars, activeJar, onBallDrop, motionEnabled
 						hitArea.on('pointerover', () => setJarHover(jarIndex));
 						hitArea.on('pointerout', () => setJarHover(null));
 						jarContainer.add(hitArea);
+						if (this.hoverJarState === jarIndex || this.activeJarState === jarIndex) {
+							jarContainer.setScale(1.07);
+						}
 
 						jar.forEach((color, ballIndex) => {
 							const ballRadius = 31;
-							const ballX = 0;
-							const ballY = baseY - ballRadius - ballIndex * (ballRadius * 2 + 10) - (y + jarHeight / 2);
+							const ballX = x + jarWidth / 2;
+							const ballY = baseY - ballRadius - ballIndex * (ballRadius * 2 + 10);
 							const isTopBall = ballIndex === jar.length - 1;
+
+							if (this.activeJarState === jarIndex && isTopBall) {
+								return;
+							}
+
 							const ball = this.add.circle(ballX, ballY, ballRadius, Phaser.Display.Color.HexStringToColor(color).color);
 
 							ball.setStrokeStyle(2, 0xffffff, 0.2);
-							jarContainer.add(ball);
-							jarContainer.add(this.add.circle(ballX - 10, ballY - 12, 8, 0xffffff, 0.28));
+							this.add.circle(ballX - 10, ballY - 12, 8, 0xffffff, 0.28);
 
 							if (isTopBall) {
 								ball.setInteractive({ useHandCursor: true });
 								this.input.setDraggable(ball);
 								ball.setData('sourceJar', jarIndex);
-								ball.setData('containerX', x + jarWidth / 2);
-								ball.setData('containerY', y + jarHeight / 2);
 							}
 
 							if (this.motionEnabledState && !isTopBall) {
@@ -215,7 +222,7 @@ export default function PhaserBoard({ jars, activeJar, onBallDrop, motionEnabled
 						const ball = gameObject as Phaser.GameObjects.Arc;
 						const targetJar = getJarIndexFromPointer(pointer.x, pointer.y);
 
-						ball.setPosition(pointer.x - (ball.getData('containerX') as number), pointer.y - (ball.getData('containerY') as number));
+						ball.setPosition(pointer.x, pointer.y);
 						setJarHover(targetJar >= 0 ? targetJar : null);
 					});
 					this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
@@ -270,10 +277,11 @@ export default function PhaserBoard({ jars, activeJar, onBallDrop, motionEnabled
 
 		scene.jarsState = jars;
 		scene.activeJarState = activeJar;
+		scene.hoverJarState = hoverJar;
 		scene.onBallDropState = onBallDrop;
 		scene.motionEnabledState = motionEnabled;
 		scene.renderBoard?.();
-	}, [jars, activeJar, onBallDrop, motionEnabled]);
+	}, [jars, activeJar, hoverJar, onBallDrop, motionEnabled]);
 
 	return <div className="phaserBoard" ref={containerRef} aria-hidden="true" />;
 }

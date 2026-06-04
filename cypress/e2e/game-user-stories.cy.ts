@@ -42,9 +42,47 @@ const readBoardSignature = () =>
 const dragTopBallToJar = (sourceJar: number, targetJar: number) => {
 	cy.get(selectors.jar(sourceJar))
 		.find(`${selectors.ball}[data-top="true"]`)
-		.trigger('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
-	cy.get(selectors.jar(targetJar)).trigger('pointermove', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
-	cy.get(selectors.jar(targetJar)).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0 });
+		.then(($ball) => {
+			const rect = $ball[0].getBoundingClientRect();
+
+			cy.wrap($ball).trigger('pointerdown', {
+				pointerId: 1,
+				pointerType: 'mouse',
+				button: 0,
+				buttons: 1,
+				clientX: rect.left + rect.width / 2,
+				clientY: rect.top + rect.height / 2,
+			});
+		});
+	cy.get('.dragGhost').should('exist');
+	cy.get(selectors.jar(targetJar)).then(($jar) => {
+		const rect = $jar[0].getBoundingClientRect();
+		const clientX = rect.left + rect.width / 2;
+		const clientY = rect.top + rect.height / 2;
+
+		cy.wrap($jar).trigger('pointermove', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1, clientX, clientY });
+		cy.wrap($jar).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX, clientY });
+	});
+};
+
+const dragTopBallOutsideJar = (sourceJar: number) => {
+	cy.get(selectors.jar(sourceJar))
+		.find(`${selectors.ball}[data-top="true"]`)
+		.then(($ball) => {
+			const rect = $ball[0].getBoundingClientRect();
+
+			cy.wrap($ball).trigger('pointerdown', {
+				pointerId: 1,
+				pointerType: 'mouse',
+				button: 0,
+				buttons: 1,
+				clientX: rect.left + rect.width / 2,
+				clientY: rect.top + rect.height / 2,
+			});
+		});
+	cy.get('.dragGhost').should('exist');
+	cy.get(selectors.gameBoard).trigger('pointermove', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1, clientX: 8, clientY: 8 });
+	cy.get(selectors.gameBoard).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX: 8, clientY: 8 });
 };
 
 describe('Color Ball Sort user stories', () => {
@@ -85,13 +123,47 @@ describe('Color Ball Sort user stories', () => {
 		cy.get(selectors.moves).should('contain.text', '1');
 	});
 
+	it('keeps the dragged ball attached to mouse input', () => {
+		startSprint();
+
+		cy.get(selectors.jar(1))
+			.find(`${selectors.ball}[data-top="true"]`)
+			.then(($ball) => {
+				const rect = $ball[0].getBoundingClientRect();
+
+				cy.wrap($ball).trigger('pointerdown', {
+					pointerId: 1,
+					pointerType: 'mouse',
+					button: 0,
+					buttons: 1,
+					clientX: rect.left + rect.width / 2,
+					clientY: rect.top + rect.height / 2,
+				});
+			});
+		cy.get(selectors.jar(5)).then(($jar) => {
+			const rect = $jar[0].getBoundingClientRect();
+			const clientX = rect.left + rect.width / 2;
+			const clientY = rect.top + rect.height / 2;
+
+			cy.wrap($jar).trigger('pointermove', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1, clientX, clientY });
+			cy.get('.dragGhost')
+				.should('exist')
+				.and(($ghost) => {
+					const ghostRect = $ghost[0].getBoundingClientRect();
+
+					expect(ghostRect.left + ghostRect.width / 2).to.be.closeTo(clientX, 2);
+					expect(ghostRect.top + ghostRect.height / 2).to.be.closeTo(clientY, 2);
+				});
+			cy.wrap($jar).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX, clientY });
+		});
+		cy.get(selectors.moves).should('contain.text', '1');
+	});
+
 	it('reverts a dragged ball when it is dropped outside a jar', () => {
 		startSprint();
 
 		readBoardSignature().as('initialSignature');
-		cy.get(selectors.jar(1)).find(`${selectors.ball}[data-top="true"]`).trigger('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
-		cy.get(selectors.gameBoard).trigger('pointermove', 8, 8, { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 });
-		cy.get(selectors.gameBoard).trigger('pointerup', 8, 8, { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0 });
+		dragTopBallOutsideJar(1);
 
 		cy.get<string>('@initialSignature').then((initialSignature) => {
 			readBoardSignature().should((nextSignature) => {
