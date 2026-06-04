@@ -13,6 +13,7 @@
 		"run": "next dev",
 		"build": "next build",
 		"start": "next start",
+		"seed:levels": "node scripts/seed-levels.js",
 		"typecheck": "tsc --noEmit",
 		"style:check": "prettier --single-quote --use-tabs --arrow-parens always --quote-props consistent --print-width 160 --check \"**/*.{ts,tsx,css,html,json,md}\"",
 		"style:fix": "prettier --single-quote --use-tabs --arrow-parens always --quote-props consistent --print-width 160 --write \"**/*.{ts,tsx,css,html,json,md}\"",
@@ -21,6 +22,7 @@
 		"test": "cypress run"
 	},
 	"dependencies": {
+		"mongodb": "^7.2.0",
 		"next": "^16.2.7",
 		"phaser": "^4.1.0",
 		"react": "^19.2.7",

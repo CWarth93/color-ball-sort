@@ -4,46 +4,15 @@ import Link from 'next/link';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
 
+import type { StoredLevel } from '../lib/levelTypes';
+
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
 
 const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 3;
 const ballsPerColor = 3;
-const jarCount = 6;
-const difficultyRange = [6, 7, 8, 9];
-
-const shuffle = <T,>(items: T[]) => {
-	const shuffledItems = [...items];
-
-	for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
-		const swapIndex = Math.floor(Math.random() * (index + 1));
-		[shuffledItems[index], shuffledItems[swapIndex]] = [shuffledItems[swapIndex], shuffledItems[index]];
-	}
-
-	return shuffledItems;
-};
-
-const hasMixedJar = (jars: string[][]) => jars.some((jar) => new Set(jar).size > 1);
 
 const cloneJars = (jars: string[][]) => jars.map((jar) => [...jar]);
-
-const serializeJars = (jars: string[][]) => jars.map((jar) => jar.join(',')).join('|');
-
-const createJarAssignments = () => {
-	const assign = (remainingColors: string[]): string[][] => {
-		if (remainingColors.length === 1) {
-			return [remainingColors];
-		}
-
-		return remainingColors.flatMap((color, colorIndex) =>
-			assign([...remainingColors.slice(0, colorIndex), ...remainingColors.slice(colorIndex + 1)]).map((nextColors) => [color, ...nextColors])
-		);
-	};
-
-	return Array.from({ length: jarCount }, (_, emptyJarIndex) => assign(colors).map((assignedColors) => ({ assignedColors, emptyJarIndex }))).flat();
-};
-
-const jarAssignments = createJarAssignments();
 
 const createFallbackLevel = () => [
 	[colors[0], colors[1], colors[2]],
@@ -53,100 +22,6 @@ const createFallbackLevel = () => [
 	[colors[4], colors[0], colors[1]],
 	[],
 ];
-
-const calculateRequiredMoveLowerBound = (jars: string[][]) => {
-	let mostBallsAlreadyInFinalJars = 0;
-
-	jarAssignments.forEach(({ assignedColors, emptyJarIndex }) => {
-		let keptBalls = 0;
-		let colorIndex = 0;
-
-		for (let jarIndex = 0; jarIndex < jarCount; jarIndex += 1) {
-			if (jarIndex === emptyJarIndex) {
-				continue;
-			}
-
-			const assignedColor = assignedColors[colorIndex];
-			keptBalls += jars[jarIndex].filter((color) => color === assignedColor).length;
-			colorIndex += 1;
-		}
-
-		mostBallsAlreadyInFinalJars = Math.max(mostBallsAlreadyInFinalJars, keptBalls);
-	});
-
-	return colors.length * ballsPerColor - mostBallsAlreadyInFinalJars;
-};
-
-const calculateMinimumTurns = (jars: string[][], knownSolutionTurns: number) => {
-	const requiredMoveLowerBound = calculateRequiredMoveLowerBound(jars);
-
-	if (requiredMoveLowerBound === knownSolutionTurns) {
-		return requiredMoveLowerBound;
-	}
-
-	return null;
-};
-
-const createSolvedLevel = () => [...colors.map((color) => Array.from({ length: ballsPerColor }, () => color)), []];
-
-const createScrambledLevel = (minimumTurns: number) => {
-	let nextJars = createSolvedLevel();
-	const seenStates = new Set([serializeJars(nextJars)]);
-
-	for (let turn = 0; turn < minimumTurns; turn += 1) {
-		const candidates: string[][][] = [];
-
-		for (let sourceJar = 0; sourceJar < jarCount; sourceJar += 1) {
-			if (nextJars[sourceJar].length === 0) {
-				continue;
-			}
-
-			for (let targetJar = 0; targetJar < jarCount; targetJar += 1) {
-				if (sourceJar === targetJar || nextJars[targetJar].length >= jarCapacity) {
-					continue;
-				}
-
-				const candidateJars = cloneJars(nextJars);
-				const movingBall = candidateJars[sourceJar].pop();
-
-				if (!movingBall) {
-					continue;
-				}
-
-				candidateJars[targetJar].push(movingBall);
-
-				const stateKey = serializeJars(candidateJars);
-				if (!seenStates.has(stateKey) && calculateRequiredMoveLowerBound(candidateJars) === turn + 1) {
-					candidates.push(candidateJars);
-				}
-			}
-		}
-
-		if (candidates.length === 0) {
-			return null;
-		}
-
-		nextJars = shuffle(candidates)[0];
-		seenStates.add(serializeJars(nextJars));
-	}
-
-	return nextJars;
-};
-
-const createLevel = () => {
-	const targetMinimumTurns = shuffle(difficultyRange)[0];
-
-	for (let attempt = 0; attempt < 200; attempt += 1) {
-		const nextJars = createScrambledLevel(targetMinimumTurns);
-		const minimumTurns = nextJars === null ? null : calculateMinimumTurns(nextJars, targetMinimumTurns);
-
-		if (nextJars !== null && minimumTurns !== null && hasMixedJar(nextJars)) {
-			return { jars: nextJars, minimumTurns };
-		}
-	}
-
-	return { jars: createSolvedLevel(), minimumTurns: 0 };
-};
 
 const isLevelSolved = (jars: string[][]) =>
 	jars.every((jar) => {
@@ -164,6 +39,18 @@ type DragState = {
 	y: number;
 };
 
+const loadRandomStoredLevel = async () => {
+	const response = await fetch('/api/levels/random');
+
+	if (!response.ok) {
+		throw new Error('Unable to load a stored level');
+	}
+
+	const data = (await response.json()) as { level: StoredLevel };
+
+	return data.level;
+};
+
 export default function HomePage() {
 	const [jars, setJars] = useState(() => createFallbackLevel());
 	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
@@ -175,16 +62,20 @@ export default function HomePage() {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
-	const isMoveLimitBlocking = movesUsed >= moveBudget && !showLevelComplete;
+	const isMoveLimitBlocking = boardReady && movesUsed >= moveBudget && !showLevelComplete;
 
-	useEffect(() => {
-		const nextLevel = createLevel();
+	const loadNextLevel = async () => {
+		const nextLevel = await loadRandomStoredLevel();
 
 		setJars(nextLevel.jars);
 		setMoveBudget(nextLevel.minimumTurns);
 		setMovesUsed(0);
 		setTurnHistory([]);
 		setBoardReady(true);
+	};
+
+	useEffect(() => {
+		void loadNextLevel();
 	}, []);
 
 	useEffect(() => {
@@ -266,13 +157,7 @@ export default function HomePage() {
 		setDragState(null);
 		setDragSourceJar(null);
 		window.setTimeout(() => {
-			const generatedLevel = createLevel();
-
-			setJars(generatedLevel.jars);
-			setMoveBudget(generatedLevel.minimumTurns);
-			setMovesUsed(0);
-			setTurnHistory([]);
-			setShowLevelComplete(false);
+			void loadNextLevel().finally(() => setShowLevelComplete(false));
 		}, 1200);
 	};
 
