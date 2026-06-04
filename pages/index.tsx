@@ -2,225 +2,42 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
-import { useEffect, useState } from 'react';
 
+import { useGameState } from '../hooks/useGameState';
 import { useThemeSelection } from '../hooks/useThemeSelection';
 import { boardCssVariables } from '../lib/boardGeometry';
 import { jarCapacity } from '../lib/gameConfig';
-import { applyMove, canDropBall, cloneJars, isLevelSolved } from '../lib/gameRules';
-import type { StoredLevel } from '../lib/levelTypes';
 import { themes } from '../lib/themes';
 
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), {
 	ssr: false,
 });
 
-type DragState = {
-	sourceJar: number;
-	fill: string;
-	icon: string;
-	x: number;
-	y: number;
-};
-
-const loadRandomStoredLevel = async () => {
-	const response = await fetch('/api/levels/random');
-
-	if (!response.ok) {
-		throw new Error('Unable to load a stored level');
-	}
-
-	const data = (await response.json()) as { level: StoredLevel };
-
-	return data.level;
-};
-
 export default function HomePage() {
-	const [jars, setJars] = useState<string[][]>([]);
-	const [initialJars, setInitialJars] = useState<string[][]>([]);
-	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
-	const [moveBudget, setMoveBudget] = useState(0);
-	const [movesUsed, setMovesUsed] = useState(0);
-	const [dragSourceJar, setDragSourceJar] = useState<number | null>(null);
-	const [hoverJar, setHoverJar] = useState<number | null>(null);
-	const [dragState, setDragState] = useState<DragState | null>(null);
-	const [level, setLevel] = useState(1);
-	const [boardReady, setBoardReady] = useState(false);
-	const [showLevelComplete, setShowLevelComplete] = useState(false);
 	const { activeTheme, selectTheme } = useThemeSelection();
-	const isLoadingLevel = !boardReady && !showLevelComplete;
-	const isMoveLimitBlocking = boardReady && movesUsed >= moveBudget && !showLevelComplete;
-
-	const loadNextLevel = async () => {
-		setBoardReady(false);
-		const nextLevel = await loadRandomStoredLevel();
-		const loadedJars = cloneJars(nextLevel.jars);
-
-		setJars(loadedJars);
-		setInitialJars(cloneJars(loadedJars));
-		setMoveBudget(nextLevel.minimumTurns);
-		setMovesUsed(0);
-		setTurnHistory([]);
-		setDragSourceJar(null);
-		setHoverJar(null);
-		setDragState(null);
-		setBoardReady(true);
-	};
-
-	useEffect(() => {
-		void loadNextLevel();
-	}, []);
-
-	useEffect(() => {
-		if (!dragState) {
-			return undefined;
-		}
-
-		const getHoveredJar = (clientX: number, clientY: number) => {
-			const element = document.elementFromPoint(clientX, clientY);
-			const jarElement = element?.closest<HTMLElement>('[data-jar-index]');
-			const jarIndex = jarElement?.dataset.jarIndex;
-
-			return jarIndex === undefined ? null : Number(jarIndex);
-		};
-		const moveDrag = (event: globalThis.PointerEvent) => {
-			setDragState((currentDragState) => (currentDragState ? { ...currentDragState, x: event.clientX, y: event.clientY } : currentDragState));
-			setHoverJar(getHoveredJar(event.clientX, event.clientY));
-		};
-		const endDrag = (event: globalThis.PointerEvent) => {
-			const targetJar = getHoveredJar(event.clientX, event.clientY);
-
-			if (targetJar !== null) {
-				dropBall(targetJar, dragState.sourceJar);
-			} else {
-				setDragSourceJar(null);
-			}
-			setHoverJar(null);
-			setDragState(null);
-		};
-
-		window.addEventListener('pointermove', moveDrag);
-		window.addEventListener('pointerup', endDrag);
-
-		return () => {
-			window.removeEventListener('pointermove', moveDrag);
-			window.removeEventListener('pointerup', endDrag);
-		};
-	}, [dragState, jars]);
-
-	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
-		if (!boardReady || showLevelComplete || isMoveLimitBlocking || ballIndex !== jars[jarIndex].length - 1) {
-			return;
-		}
-
-		event.preventDefault();
-		const ballStyle = activeTheme.ballStyles[jars[jarIndex][ballIndex]];
-		setDragSourceJar(jarIndex);
-		setHoverJar(jarIndex);
-		setDragState({
-			sourceJar: jarIndex,
-			fill: ballStyle?.fill ?? jars[jarIndex][ballIndex],
-			icon: ballStyle?.icon ?? '',
-			x: event.clientX,
-			y: event.clientY,
-		});
-	};
-
-	const moveDragOverJar = (jarIndex: number) => {
-		if (!dragState) {
-			return;
-		}
-
-		setHoverJar(jarIndex);
-	};
-
-	const endDragOverJar = (event: ReactPointerEvent, jarIndex: number) => {
-		if (!dragState) {
-			return;
-		}
-
-		event.stopPropagation();
-		dropBall(jarIndex, dragState.sourceJar);
-	};
-
-	const completeLevel = () => {
-		const nextLevel = level + 1;
-
-		setLevel(nextLevel);
-		setShowLevelComplete(true);
-		setHoverJar(null);
-		setDragState(null);
-		setDragSourceJar(null);
-		window.setTimeout(() => {
-			void loadNextLevel().finally(() => setShowLevelComplete(false));
-		}, 1200);
-	};
-
-	const undoTurn = () => {
-		if (showLevelComplete || turnHistory.length === 0) {
-			return;
-		}
-
-		const previousJars = turnHistory[turnHistory.length - 1];
-
-		setJars(cloneJars(previousJars));
-		setTurnHistory((currentHistory) => currentHistory.slice(0, -1));
-		setMovesUsed((currentMovesUsed) => Math.max(0, currentMovesUsed - 1));
-		setDragSourceJar(null);
-		setHoverJar(null);
-		setDragState(null);
-	};
-
-	const resetLevel = () => {
-		if (!boardReady || showLevelComplete || initialJars.length === 0) {
-			return;
-		}
-
-		setJars(cloneJars(initialJars));
-		setTurnHistory([]);
-		setMovesUsed(0);
-		setDragSourceJar(null);
-		setHoverJar(null);
-		setDragState(null);
-	};
-
-	const skipLevel = () => {
-		if (!boardReady || showLevelComplete) {
-			return;
-		}
-
-		setLevel((currentLevel) => currentLevel + 1);
-		void loadNextLevel();
-	};
-
-	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
-		if (!boardReady || showLevelComplete || isMoveLimitBlocking || sourceJar === null || !canDropBall(jars, sourceJar, targetJar)) {
-			setDragSourceJar(null);
-			setHoverJar(null);
-			setDragState(null);
-			return;
-		}
-
-		const nextJars = applyMove(jars, sourceJar, targetJar);
-
-		if (!nextJars) {
-			return;
-		}
-
-		const nextMovesUsed = movesUsed + 1;
-
-		setTurnHistory((currentHistory) => [...currentHistory, cloneJars(jars)]);
-		setMovesUsed(nextMovesUsed);
-		setJars(nextJars);
-		setDragSourceJar(null);
-		setHoverJar(null);
-		setDragState(null);
-
-		if (nextMovesUsed <= moveBudget && isLevelSolved(nextJars)) {
-			completeLevel();
-		}
-	};
+	const {
+		boardReady,
+		clearDragState,
+		dragSourceJar,
+		dragState,
+		dropBall,
+		endDragOverJar,
+		hoverJar,
+		isLoadingLevel,
+		isMoveLimitBlocking,
+		jars,
+		level,
+		moveBudget,
+		moveDragOverJar,
+		movesUsed,
+		resetLevel,
+		setHoverJar,
+		showLevelComplete,
+		skipLevel,
+		startBallDrag,
+		turnHistory,
+		undoTurn,
+	} = useGameState({ activeTheme });
 
 	return (
 		<>
@@ -270,7 +87,7 @@ export default function HomePage() {
 						aria-label="Color Ball Sort board"
 						onPointerUp={(event) => {
 							if (event.target === event.currentTarget) {
-								setDragSourceJar(null);
+								clearDragState();
 							}
 						}}
 					>
