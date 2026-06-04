@@ -65,7 +65,7 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, mot
 					this.cameras.main.setBackgroundColor('#11191d');
 
 					const jarWidth = 112;
-					const jarHeight = 320;
+					const jarHeight = 248;
 					const gap = (boardWidth - jarWidth * this.jarsState.length) / (this.jarsState.length + 1);
 					const baseY = boardHeight - 48;
 					const drawJarGlass = (jarIndex: number) => {
