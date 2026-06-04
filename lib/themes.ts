@@ -1,3 +1,5 @@
+import { logicalColors } from './gameConfig';
+
 export type BallStyle = {
 	fill: string;
 	icon: string;
@@ -17,8 +19,6 @@ export type GameTheme = {
 	jarFillSelected: string;
 	jarFillHovered: string;
 };
-
-export const logicalColors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 
 export const themes: GameTheme[] = [
 	{

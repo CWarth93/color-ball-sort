@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
 
+import { ballsPerColor, jarCapacity } from '../lib/gameConfig';
 import type { StoredLevel } from '../lib/levelTypes';
 import { themeStorageKey } from '../lib/themeStorage';
 import { defaultTheme, themes } from '../lib/themes';
@@ -11,9 +12,6 @@ import { defaultTheme, themes } from '../lib/themes';
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), {
 	ssr: false,
 });
-
-const jarCapacity = 3;
-const ballsPerColor = 3;
 
 const cloneJars = (jars: string[][]) => jars.map((jar) => [...jar]);
 

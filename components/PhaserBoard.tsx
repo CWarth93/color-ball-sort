@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 
+import { jarCapacity } from '../lib/gameConfig';
 import type { GameTheme } from '../lib/themes';
 import { themes } from '../lib/themes';
 
@@ -24,7 +25,6 @@ type SceneInstance = import('phaser').Scene & {
 
 const boardWidth = 920;
 const boardHeight = 448;
-const jarCapacity = 3;
 const jarWidth = 132;
 const jarHeight = 368;
 const jarTopInset = 18;
