@@ -31,6 +31,13 @@ describe('game rules', () => {
 		expect(jars).to.deep.equal([['red', 'blue'], ['green']]);
 	});
 
+	it('allows moving the last ball out of a jar', () => {
+		const jars = [['red'], ['blue']];
+
+		expect(canDropBall(jars, 0, 1)).to.equal(true);
+		expect(applyMove(jars, 0, 1)).to.deep.equal([[], ['blue', 'red']]);
+	});
+
 	it('rejects moves into the same jar, full jars, empty sources, and missing jars', () => {
 		const jars = [['red'], ['blue', 'green', 'yellow'], []];
 

@@ -336,6 +336,32 @@ describe('Color Ball Sort endless game', () => {
 		});
 	});
 
+	it('allows dragging the last ball out of a jar', () => {
+		cy.intercept('GET', '/api/levels/random', {
+			body: {
+				level: {
+					key: 'test-empty-source-jar',
+					difficulty: 'easy',
+					minimumTurns: 8,
+					fastPathCount: 8,
+					jars: [['#ff5a6f'], ['#ffd166'], ['#49c6e5'], ['#65d46e'], ['#a78bfa'], []],
+					colors: ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'],
+					ballsPerColor: 3,
+					jarCount: 6,
+					emptyJarCount: 1,
+				},
+			},
+		}).as('loadSingleBallJars');
+
+		startGame();
+		cy.wait('@loadSingleBallJars');
+
+		dragTopBallToJar(0, 5);
+
+		cy.get(selectors.jar(0)).find(selectors.ball).should('have.length', 0);
+		cy.get(selectors.jar(5)).find(selectors.ball).should('have.length', 1);
+	});
+
 	it('undoes turns back to the beginning of the level', () => {
 		startGame();
 		readBoardSignature().as('initialSignature');
