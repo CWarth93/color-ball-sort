@@ -20,6 +20,14 @@ type SceneInstance = import('phaser').Scene & {
 const boardWidth = 920;
 const boardHeight = 448;
 const jarCapacity = 3;
+const jarWidth = 112;
+const jarHeight = 232;
+const jarTopInset = 20;
+const jarBottomInset = 16;
+const jarInnerPadding = 10;
+const jarInnerHeight = jarHeight - jarTopInset - jarBottomInset;
+const slotHeight = jarInnerHeight / jarCapacity;
+const ballRadius = Math.min(30, slotHeight / 2 - jarInnerPadding);
 
 export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: PhaserBoardProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
@@ -61,10 +69,10 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 					this.jarShapes.clear();
 					this.cameras.main.setBackgroundColor('#11191d');
 
-					const jarWidth = 112;
-					const jarHeight = 248;
 					const gap = (boardWidth - jarWidth * this.jarsState.length) / (this.jarsState.length + 1);
 					const baseY = boardHeight - 48;
+					const jarTop = -jarHeight / 2 + jarTopInset;
+					const jarBottom = jarHeight / 2 - jarBottomInset;
 					const drawJarGlass = (jarIndex: number) => {
 						const jarShape = this.jarShapes.get(jarIndex);
 
@@ -80,10 +88,15 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 						jarShape.clear();
 						jarShape.lineStyle(isSelected ? 5 : isHovered ? 4 : 3, borderColor, isSelected ? 0.95 : 0.72);
 						jarShape.fillStyle(glassFill, isSelected ? 0.66 : 0.42);
-						jarShape.fillRoundedRect(-jarWidth / 2, -jarHeight / 2 + 20, jarWidth, jarHeight - 20, 22);
-						jarShape.strokeRoundedRect(-jarWidth / 2, -jarHeight / 2 + 20, jarWidth, jarHeight - 20, 22);
+						jarShape.fillRoundedRect(-jarWidth / 2, jarTop, jarWidth, jarInnerHeight, 22);
+						jarShape.strokeRoundedRect(-jarWidth / 2, jarTop, jarWidth, jarInnerHeight, 22);
 						jarShape.lineStyle(2, 0xffffff, isSelected ? 0.28 : 0.18);
-						jarShape.lineBetween(-jarWidth * 0.22, -jarHeight / 2 + 38, -jarWidth * 0.22, jarHeight / 2 - 28);
+						jarShape.lineBetween(-jarWidth * 0.22, jarTop + 18, -jarWidth * 0.22, jarBottom - 12);
+						jarShape.lineStyle(1, 0xffffff, isSelected ? 0.22 : 0.14);
+						for (let slotIndex = 1; slotIndex < jarCapacity; slotIndex += 1) {
+							const separatorY = jarBottom - slotHeight * slotIndex;
+							jarShape.lineBetween(-jarWidth / 2 + 14, separatorY, jarWidth / 2 - 14, separatorY);
+						}
 					};
 					const setJarHover = (jarIndex: number | null) => {
 						if (this.hoverJarState === jarIndex) {
@@ -147,9 +160,8 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 						}
 
 						jar.forEach((color, ballIndex) => {
-							const ballRadius = 31;
 							const ballX = x + jarWidth / 2;
-							const ballY = baseY - ballRadius - ballIndex * (ballRadius * 2 + 10);
+							const ballY = baseY + jarBottom - jarHeight / 2 - slotHeight * (ballIndex + 0.5);
 							const isTopBall = ballIndex === jar.length - 1;
 
 							if (this.activeJarState === jarIndex && isTopBall) {

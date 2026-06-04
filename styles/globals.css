@@ -299,14 +299,13 @@ h1 {
 	position: absolute;
 	z-index: 5;
 	bottom: 1.25rem;
-	display: flex;
-	flex-direction: column-reverse;
+	display: grid;
+	grid-template-rows: repeat(3, 1fr);
 	align-items: center;
-	justify-content: flex-start;
-	gap: 0.55rem;
+	justify-items: center;
 	width: calc((100% - 2.5rem - 5rem) / 6);
-	min-height: 15.5rem;
-	padding: 1rem 0.6rem 1.35rem;
+	height: 14.5rem;
+	padding: 0.65rem 0.6rem 1.65rem;
 	border: 0;
 	border-top: 0;
 	border-radius: 0 0 1.35rem 1.35rem;
@@ -352,7 +351,7 @@ h1 {
 
 .gameBall {
 	display: block;
-	width: min(80%, 4.4rem);
+	width: min(76%, 3.75rem);
 	aspect-ratio: 1;
 	border-radius: 999px;
 	box-shadow: none;
@@ -423,8 +422,8 @@ h1 {
 	.gameJar {
 		bottom: 0.65rem;
 		width: calc((100% - 1.3rem - 2.5rem) / 6);
-		min-height: 7rem;
-		padding: 0.55rem 0.25rem 0.75rem;
+		height: 7.1rem;
+		padding: 0.35rem 0.25rem 0.75rem;
 		border-radius: 0 0 0.8rem 0.8rem;
 	}
 

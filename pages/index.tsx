@@ -278,7 +278,7 @@ export default function HomePage() {
 											event.preventDefault();
 										}}
 										onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
-										style={{ backgroundColor: color }}
+										style={{ backgroundColor: color, gridRow: jarCapacity - ballIndex }}
 										key={`${color}-${jarIndex}-${ballIndex}`}
 									/>
 								))}
