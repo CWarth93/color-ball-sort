@@ -483,11 +483,16 @@ describe('Color Ball Sort endless game', () => {
 		startGame();
 
 		cy.get(selectors.gameBoard).should('be.visible').and('have.css', 'user-select', 'none');
+		cy.get(selectors.gameBoard).then(($board) => {
+			const rect = $board[0].getBoundingClientRect();
+
+			expect(rect.width).to.be.greaterThan(365);
+		});
 		cy.get(selectors.jar(0)).then(($jar) => {
 			const rect = $jar[0].getBoundingClientRect();
 
-			expect(rect.width).to.be.greaterThan(44);
-			expect(rect.height).to.be.greaterThan(100);
+			expect(rect.width).to.be.greaterThan(54);
+			expect(rect.height).to.be.greaterThan(200);
 		});
 		cy.get(selectors.jar(0)).should('have.css', '-webkit-tap-highlight-color', 'rgba(0, 0, 0, 0)').and('have.css', 'user-select', 'none');
 		cy.get(selectors.ball).first().should('have.css', '-webkit-tap-highlight-color', 'rgba(0, 0, 0, 0)').and('have.css', 'user-select', 'none');
