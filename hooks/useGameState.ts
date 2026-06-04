@@ -139,7 +139,7 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 			setHoverJar(getHoveredJar(event.clientX, event.clientY));
 		};
 		const endDrag = (event: globalThis.PointerEvent) => {
-			const targetJar = getHoveredJar(event.clientX, event.clientY);
+			const targetJar = getHoveredJar(event.clientX, event.clientY) ?? hoverJar;
 
 			if (targetJar !== null) {
 				dropBall(targetJar, dragState.sourceJar);
@@ -157,7 +157,7 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 			window.removeEventListener('pointermove', moveDrag);
 			window.removeEventListener('pointerup', endDrag);
 		};
-	}, [dragState, dropBall]);
+	}, [dragState, dropBall, hoverJar]);
 
 	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
 		if (!boardReady || showLevelComplete || isMoveLimitBlocking || ballIndex !== jars[jarIndex].length - 1) {
