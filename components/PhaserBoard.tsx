@@ -169,17 +169,6 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, mot
 								this.input.setDraggable(ball);
 								ball.setData('sourceJar', jarIndex);
 							}
-
-							if (this.motionEnabledState && !isTopBall) {
-								this.tweens.add({
-									targets: ball,
-									y: ballY - 4,
-									duration: 900 + ballIndex * 80,
-									yoyo: true,
-									repeat: -1,
-									ease: 'Sine.easeInOut',
-								});
-							}
 						});
 
 						if (jar.length < jarCapacity) {
