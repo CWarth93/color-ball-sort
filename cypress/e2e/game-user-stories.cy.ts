@@ -14,14 +14,14 @@ const selectors = {
 	cyberpunkTheme: '[data-testid="theme-cyberpunk"]',
 	lofiTheme: '[data-testid="theme-lofi"]',
 	poolcoreTheme: '[data-testid="theme-poolcore"]',
-	fruitigerAeroTheme: '[data-testid="theme-fruitiger-aero"]',
+	barbieTheme: '[data-testid="theme-barbie"]',
 };
 
 const themeOptions = [
 	{ id: 'cyberpunk', selector: selectors.cyberpunkTheme },
 	{ id: 'lofi', selector: selectors.lofiTheme },
 	{ id: 'poolcore', selector: selectors.poolcoreTheme },
-	{ id: 'fruitiger-aero', selector: selectors.fruitigerAeroTheme },
+	{ id: 'barbie', selector: selectors.barbieTheme },
 ];
 
 const startGame = () => {
