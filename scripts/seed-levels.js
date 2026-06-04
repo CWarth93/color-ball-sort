@@ -37,7 +37,9 @@ const loadLocalEnv = () => {
 
 const levelPlan = [
 	{ difficulty: 'easy', minimumTurns: [6, 7, 8], count: 10 },
+	{ difficulty: 'easy', minimumTurns: [9, 10], count: 5 },
 	{ difficulty: 'medium', minimumTurns: [11, 12, 13], count: 10 },
+	{ difficulty: 'medium', minimumTurns: [14, 15], count: 3 },
 	{ difficulty: 'hard', minimumTurns: [16, 17, 18, 19], count: 10 },
 ];
 
