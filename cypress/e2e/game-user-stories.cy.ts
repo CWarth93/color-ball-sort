@@ -1,35 +1,20 @@
 const selectors = {
-	startSprint: '[data-testid="start-sprint"]',
 	gameBoard: '[data-testid="game-board"]',
 	jar: (index: number) => `[data-testid="jar-${index}"]`,
 	ball: '[data-testid="ball"]',
-	timer: '[data-testid="timer"]',
-	completedLevels: '[data-testid="completed-levels"]',
-	score: '[data-testid="score"]',
-	moves: '[data-testid="moves"]',
+	levelLabel: '[data-testid="level-label"]',
 	levelComplete: '[data-testid="level-complete"]',
-	results: '[data-testid="results"]',
-	finalLevels: '[data-testid="final-levels"]',
-	finalScore: '[data-testid="final-score"]',
-	finalMoves: '[data-testid="final-moves"]',
 	settings: '[data-testid="settings"]',
 	soundToggle: '[data-testid="sound-toggle"]',
 	motionToggle: '[data-testid="motion-toggle"]',
-	leaderboardName: '[data-testid="leaderboard-name"]',
-	submitScore: '[data-testid="submit-score"]',
 };
 
-const startSprint = ({ useClock = false }: { useClock?: boolean } = {}) => {
+const startGame = () => {
 	cy.visit('/');
 	cy.window().should((win) => {
 		expect(win.document.readyState).to.equal('complete');
 	});
-	cy.wait(500);
-	if (useClock) {
-		cy.clock();
-	}
-	cy.get(selectors.startSprint).click();
-	cy.get(selectors.gameBoard).should('be.visible');
+	cy.get(selectors.gameBoard).should('be.visible').and('have.attr', 'data-ready', 'true');
 };
 
 const readBoardSignature = () =>
@@ -97,19 +82,20 @@ const dragTopBallOutsideJar = (sourceJar: number) => {
 	cy.get(selectors.gameBoard).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX: 8, clientY: 8 });
 };
 
-describe('Color Ball Sort user stories', () => {
-	it('lets a player start a two-minute sprint immediately', () => {
-		startSprint({ useClock: true });
+describe('Color Ball Sort endless game', () => {
+	it('starts directly on the endless game board', () => {
+		startGame();
 
-		cy.get(selectors.timer).should('contain.text', '02:00');
-		cy.get(selectors.completedLevels).should('contain.text', '0');
-		cy.get(selectors.score).should('contain.text', '0');
-		cy.get(selectors.moves).should('contain.text', '0');
+		cy.contains('h1', 'Color Ball Sort').should('be.visible');
+		cy.get(selectors.levelLabel).should('contain.text', 'Level 1');
+		cy.get('[data-testid="start-sprint"]').should('not.exist');
+		cy.get('[data-testid="timer"]').should('not.exist');
+		cy.get('[data-testid="score"]').should('not.exist');
 		cy.get(selectors.gameBoard).find('canvas').should('be.visible');
 	});
 
-	it('generates a small level with five colors, six jars, and one empty helper jar', () => {
-		startSprint();
+	it('generates a randomized level with five colors, six jars, and one empty helper jar', () => {
+		startGame();
 
 		cy.get('[data-testid^="jar-"]').should('have.length', 6);
 		cy.get('[data-testid^="jar-"][data-empty="true"]').should('have.length', 1);
@@ -135,7 +121,7 @@ describe('Color Ball Sort user stories', () => {
 	});
 
 	it('moves the top ball to any jar with free space', () => {
-		startSprint();
+		startGame();
 
 		findAvailableMove().then(({ sourceJar, targetJar }) => {
 			cy.get(selectors.jar(sourceJar))
@@ -147,11 +133,10 @@ describe('Color Ball Sort user stories', () => {
 					cy.get(selectors.jar(targetJar)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
 				});
 		});
-		cy.get(selectors.moves).should('contain.text', '1');
 	});
 
 	it('keeps the dragged ball attached to mouse input', () => {
-		startSprint();
+		startGame();
 
 		findAvailableMove().then(({ sourceJar, targetJar }) => {
 			cy.get(selectors.jar(sourceJar))
@@ -185,11 +170,10 @@ describe('Color Ball Sort user stories', () => {
 				cy.wrap($jar).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX, clientY });
 			});
 		});
-		cy.get(selectors.moves).should('contain.text', '1');
 	});
 
 	it('reverts a dragged ball when it is dropped outside a jar', () => {
-		startSprint();
+		startGame();
 
 		readBoardSignature().as('initialSignature');
 		findAvailableMove().then(({ sourceJar }) => {
@@ -201,29 +185,10 @@ describe('Color Ball Sort user stories', () => {
 				expect(nextSignature).to.equal(initialSignature);
 			});
 		});
-		cy.get(selectors.moves).should('contain.text', '0');
-	});
-
-	it('keeps the global timer running while moves are made', () => {
-		startSprint({ useClock: true });
-
-		cy.tick(12_000);
-		cy.get(selectors.timer).should('contain.text', '01:48');
-
-		readBoardSignature().then((initialSignature) => {
-			findAvailableMove().then(({ sourceJar, targetJar }) => {
-				dragTopBallToJar(sourceJar, targetJar);
-			});
-			cy.get(selectors.completedLevels).should('contain.text', '0');
-			cy.get(selectors.timer).should('contain.text', '01:48');
-			readBoardSignature().should((nextSignature) => {
-				expect(nextSignature).not.to.equal(initialSignature);
-			});
-		});
 	});
 
 	it('allows repeated dragging on a randomized board', () => {
-		startSprint();
+		startGame();
 
 		findAvailableMove().then(({ sourceJar, targetJar }) => {
 			dragTopBallToJar(sourceJar, targetJar);
@@ -239,44 +204,11 @@ describe('Color Ball Sort user stories', () => {
 					cy.get(selectors.jar(targetJar)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
 				});
 		});
-		cy.get(selectors.moves).should('contain.text', '2');
-	});
-
-	it('shows final results after two minutes', () => {
-		startSprint({ useClock: true });
-
-		cy.tick(120_000);
-
-		cy.get(selectors.results).should('be.visible');
-		cy.get(selectors.finalLevels).should('be.visible');
-		cy.get(selectors.finalScore).should('be.visible');
-		cy.get(selectors.finalMoves).should('be.visible');
-	});
-
-	it('submits leaderboard data for a completed sprint', () => {
-		cy.intercept('POST', '/api/leaderboard', {
-			statusCode: 201,
-			body: {
-				ok: true,
-			},
-		}).as('submitLeaderboard');
-
-		startSprint({ useClock: true });
-		cy.tick(120_000);
-		cy.get(selectors.leaderboardName).type('Ada');
-		cy.get(selectors.submitScore).click();
-
-		cy.wait('@submitLeaderboard')
-			.its('request.body')
-			.should((body) => {
-				expect(body).to.include.keys(['playerName', 'score', 'completedLevels', 'moves']);
-				expect(body.playerName).to.equal('Ada');
-			});
 	});
 
 	it('is playable on a mobile viewport with touch-sized jars', () => {
 		cy.viewport('iphone-6');
-		startSprint();
+		startGame();
 
 		cy.get(selectors.gameBoard).should('be.visible');
 		cy.get(selectors.jar(0)).then(($jar) => {
@@ -289,12 +221,11 @@ describe('Color Ball Sort user stories', () => {
 		findAvailableMove().then(({ sourceJar, targetJar }) => {
 			dragTopBallToJar(sourceJar, targetJar);
 		});
-		cy.get(selectors.moves).should('contain.text', '1');
 	});
 
 	it('is playable on a desktop viewport with a centered stable layout', () => {
 		cy.viewport(1440, 900);
-		startSprint();
+		startGame();
 
 		cy.get(selectors.gameBoard).then(($board) => {
 			const rect = $board[0].getBoundingClientRect();

@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
 
@@ -12,7 +11,6 @@ const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 3;
 const ballsPerColor = 3;
 const jarCount = 6;
-const sprintSeconds = 120;
 
 const shuffle = <T,>(items: T[]) => {
 	const shuffledItems = [...items];
@@ -26,6 +24,15 @@ const shuffle = <T,>(items: T[]) => {
 };
 
 const hasMixedJar = (jars: string[][]) => jars.some((jar) => new Set(jar).size > 1);
+
+const createFallbackLevel = () => [
+	[colors[0], colors[1], colors[2]],
+	[colors[1], colors[2], colors[3]],
+	[colors[2], colors[3], colors[4]],
+	[colors[3], colors[4], colors[0]],
+	[colors[4], colors[0], colors[1]],
+	[],
+];
 
 const createLevel = () => {
 	const balls = colors.flatMap((color) => Array.from({ length: ballsPerColor }, () => color));
@@ -45,21 +52,7 @@ const createLevel = () => {
 		}
 	}
 
-	return [
-		[colors[0], colors[1], colors[2]],
-		[colors[1], colors[2], colors[3]],
-		[colors[2], colors[3], colors[4]],
-		[colors[3], colors[4], colors[0]],
-		[colors[4], colors[0], colors[1]],
-		[],
-	];
-};
-
-const formatTime = (seconds: number) => {
-	const minutes = Math.floor(seconds / 60);
-	const remainingSeconds = seconds % 60;
-
-	return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+	return createFallbackLevel();
 };
 
 const isLevelSolved = (jars: string[][]) =>
@@ -79,40 +72,23 @@ type DragState = {
 };
 
 export default function HomePage() {
-	const [hasStarted, setHasStarted] = useState(false);
-	const [jars, setJars] = useState(createLevel);
+	const [jars, setJars] = useState(createFallbackLevel);
 	const [dragSourceJar, setDragSourceJar] = useState<number | null>(null);
 	const [hoverJar, setHoverJar] = useState<number | null>(null);
 	const [dragState, setDragState] = useState<DragState | null>(null);
-	const [moves, setMoves] = useState(0);
 	const [level, setLevel] = useState(1);
-	const [completedLevels, setCompletedLevels] = useState(0);
-	const [score, setScore] = useState(0);
-	const [secondsLeft, setSecondsLeft] = useState(sprintSeconds);
+	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
-	const [playerName, setPlayerName] = useState('');
-	const [leaderboardStatus, setLeaderboardStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [soundEnabled, setSoundEnabled] = useState(true);
 	const [motionEnabled, setMotionEnabled] = useState(true);
-	const isFinished = hasStarted && secondsLeft === 0;
 
 	useEffect(() => {
+		setJars(createLevel());
+		setBoardReady(true);
 		setSoundEnabled(window.localStorage.getItem('sound-enabled') !== 'false');
 		setMotionEnabled(window.localStorage.getItem('motion-enabled') !== 'false');
 	}, []);
-
-	useEffect(() => {
-		if (!hasStarted) {
-			return undefined;
-		}
-
-		const timer = window.setInterval(() => {
-			setSecondsLeft((currentSeconds) => Math.max(0, currentSeconds - 1));
-		}, 1000);
-
-		return () => window.clearInterval(timer);
-	}, [hasStarted]);
 
 	useEffect(() => {
 		if (!dragState) {
@@ -184,8 +160,22 @@ export default function HomePage() {
 		dropBall(jarIndex, dragState.sourceJar);
 	};
 
+	const completeLevel = () => {
+		const nextLevel = level + 1;
+
+		setLevel(nextLevel);
+		setShowLevelComplete(true);
+		setHoverJar(null);
+		setDragState(null);
+		setDragSourceJar(null);
+		window.setTimeout(() => {
+			setJars(createLevel());
+			setShowLevelComplete(false);
+		}, 1200);
+	};
+
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
-		if (sourceJar === null || sourceJar === targetJar) {
+		if (showLevelComplete || sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
 			setHoverJar(null);
 			setDragState(null);
@@ -209,20 +199,10 @@ export default function HomePage() {
 
 			nextJars[targetJar].push(movingBall);
 			if (isLevelSolved(nextJars)) {
-				const nextLevel = level + 1;
-
-				setCompletedLevels((currentCompletedLevels) => currentCompletedLevels + 1);
-				setScore((currentScore) => currentScore + 100);
-				setLevel(nextLevel);
-				setShowLevelComplete(true);
-				setHoverJar(null);
-				setDragState(null);
-				setDragSourceJar(null);
-				return createLevel();
+				completeLevel();
 			}
 			return nextJars;
 		});
-		setMoves((currentMoves) => currentMoves + 1);
 		setDragSourceJar(null);
 		setHoverJar(null);
 		setDragState(null);
@@ -244,37 +224,11 @@ export default function HomePage() {
 		});
 	};
 
-	const submitLeaderboardScore = async () => {
-		setLeaderboardStatus('saving');
-		try {
-			const response = await fetch('/api/leaderboard', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					playerName,
-					score,
-					completedLevels,
-					moves,
-				}),
-			});
-
-			if (!response.ok) {
-				throw new Error('Leaderboard submission failed.');
-			}
-
-			setLeaderboardStatus('saved');
-		} catch {
-			setLeaderboardStatus('error');
-		}
-	};
-
 	return (
 		<>
 			<Head>
 				<title>Color Ball Sort</title>
-				<meta name="description" content="A fast two-minute color ball sorting game built with Next.js, TypeScript, React, and Phaser." />
+				<meta name="description" content="An endless color ball sorting puzzle built with Next.js, TypeScript, React, and Phaser." />
 			</Head>
 			<PageShell>
 				<div className="settingsBar">
@@ -292,154 +246,75 @@ export default function HomePage() {
 						</div>
 					)}
 				</div>
-				{isFinished ? (
-					<main className="resultsScreen" data-testid="results">
-						<p className="eyebrow">Sprint complete</p>
-						<h1>Results</h1>
-						<div className="resultGrid">
-							<div>
-								<span>Levels</span>
-								<strong data-testid="final-levels">{completedLevels}</strong>
-							</div>
-							<div>
-								<span>Score</span>
-								<strong data-testid="final-score">{score}</strong>
-							</div>
-							<div>
-								<span>Moves</span>
-								<strong data-testid="final-moves">{moves}</strong>
-							</div>
-						</div>
-						<form
-							className="leaderboardForm"
-							onSubmit={(event) => {
-								event.preventDefault();
-								submitLeaderboardScore();
-							}}
-						>
-							<label htmlFor="leaderboard-name">Name</label>
-							<div>
-								<input
-									id="leaderboard-name"
-									data-testid="leaderboard-name"
-									value={playerName}
-									onChange={(event) => setPlayerName(event.target.value)}
-									placeholder="Your name"
-								/>
-								<button data-testid="submit-score" type="submit" disabled={leaderboardStatus === 'saving' || playerName.trim().length === 0}>
-									Submit score
-								</button>
-							</div>
-							{leaderboardStatus === 'saved' && <p>Score submitted.</p>}
-							{leaderboardStatus === 'error' && <p>Score could not be submitted.</p>}
-						</form>
-					</main>
-				) : hasStarted ? (
-					<main className="gameScreen">
-						<section className="gameHud" aria-label="Sprint stats">
-							<div>
-								<span>Time</span>
-								<strong data-testid="timer">{formatTime(secondsLeft)}</strong>
-							</div>
-							<div>
-								<span>Levels</span>
-								<strong data-testid="completed-levels">{completedLevels}</strong>
-							</div>
-							<div>
-								<span>Score</span>
-								<strong data-testid="score">{score}</strong>
-							</div>
-							<div>
-								<span>Moves</span>
-								<strong data-testid="moves">{moves}</strong>
-							</div>
-						</section>
-						{showLevelComplete && (
-							<p className="levelComplete" data-testid="level-complete">
-								Level complete
-							</p>
-						)}
-						<section
-							className="gameBoard"
-							data-testid="game-board"
-							data-level={level}
-							aria-label="Color Ball Sort board"
-							onPointerUp={(event) => {
-								if (event.target === event.currentTarget) {
-									setDragSourceJar(null);
-								}
-							}}
-						>
-							<PhaserBoard
-								jars={jars}
-								activeJar={dragSourceJar}
-								hoverJar={hoverJar}
-								onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)}
-								motionEnabled={motionEnabled}
-							/>
-							{jars.map((jar, jarIndex) => (
-								<button
-									className="gameJar"
-									type="button"
-									data-testid={`jar-${jarIndex}`}
-									data-jar-index={jarIndex}
-									data-empty={jar.length === 0 ? 'true' : 'false'}
-									data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
-									data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
-									key={`jar-${jarIndex}`}
-									aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
-									onPointerEnter={() => setHoverJar(jarIndex)}
-									onPointerMove={() => moveDragOverJar(jarIndex)}
-									onPointerLeave={() => setHoverJar((currentHoverJar) => (currentHoverJar === jarIndex ? null : currentHoverJar))}
-									onPointerUp={(event) => endDragOverJar(event, jarIndex)}
-								>
-									{jar.map((color, ballIndex) => (
-										<span
-											className="gameBall"
-											data-testid="ball"
-											data-color={color}
-											data-top={ballIndex === jar.length - 1 ? 'true' : 'false'}
-											draggable={ballIndex === jar.length - 1}
-											onDragStart={(event) => {
-												event.preventDefault();
-											}}
-											onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
-											style={{ backgroundColor: color }}
-											key={`${color}-${jarIndex}-${ballIndex}`}
-										/>
-									))}
-								</button>
-							))}
-							{dragState && <span className="dragGhost" style={{ backgroundColor: dragState.color, left: dragState.x, top: dragState.y }} aria-hidden="true" />}
-						</section>
-					</main>
-				) : (
-					<section className="hero" aria-labelledby="page-title">
-						<div className="heroCopy">
-							<p className="eyebrow">Next.js + Phaser game sample</p>
-							<h1 id="page-title">Color Ball Sort</h1>
-							<p className="lede">
-								A two-minute sprint puzzle: sort five colors across small jars, clear as many generated levels as possible, and chase a clean high score loop.
-							</p>
-							<div className="actionRow">
-								<button className="primaryButton" type="button" data-testid="start-sprint" onClick={() => setHasStarted(true)}>
-									Start Sprint
-								</button>
-								<Link href="/imprint" className="secondaryLink">
-									Imprint
-								</Link>
-							</div>
-						</div>
-						<div className="jarPreview" aria-hidden="true">
-							{['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa', 'empty'].map((color, jarIndex) => (
-								<div className="jar" key={`${color}-${jarIndex}`}>
-									{color !== 'empty' &&
-										Array.from({ length: 3 }).map((_, ballIndex) => <span className="ball" style={{ backgroundColor: color }} key={`${color}-${ballIndex}`} />)}
-								</div>
-							))}
-						</div>
+				<main className="gameScreen">
+					<section className="gameTitle" aria-label="Current level">
+						<p className="eyebrow">Endless puzzle</p>
+						<h1>Color Ball Sort</h1>
+						<strong data-testid="level-label">Level {level}</strong>
 					</section>
-				)}
+					<section
+						className="gameBoard"
+						data-testid="game-board"
+						data-level={level}
+						data-ready={boardReady ? 'true' : 'false'}
+						aria-label="Color Ball Sort board"
+						onPointerUp={(event) => {
+							if (event.target === event.currentTarget) {
+								setDragSourceJar(null);
+							}
+						}}
+					>
+						<PhaserBoard
+							jars={jars}
+							activeJar={dragSourceJar}
+							hoverJar={hoverJar}
+							onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)}
+							motionEnabled={motionEnabled}
+						/>
+						{jars.map((jar, jarIndex) => (
+							<button
+								className="gameJar"
+								type="button"
+								data-testid={`jar-${jarIndex}`}
+								data-jar-index={jarIndex}
+								data-empty={jar.length === 0 ? 'true' : 'false'}
+								data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
+								data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
+								key={`jar-${jarIndex}`}
+								aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
+								onPointerEnter={() => setHoverJar(jarIndex)}
+								onPointerMove={() => moveDragOverJar(jarIndex)}
+								onPointerLeave={() => setHoverJar((currentHoverJar) => (currentHoverJar === jarIndex ? null : currentHoverJar))}
+								onPointerUp={(event) => endDragOverJar(event, jarIndex)}
+							>
+								{jar.map((color, ballIndex) => (
+									<span
+										className="gameBall"
+										data-testid="ball"
+										data-color={color}
+										data-top={ballIndex === jar.length - 1 ? 'true' : 'false'}
+										draggable={ballIndex === jar.length - 1}
+										onDragStart={(event) => {
+											event.preventDefault();
+										}}
+										onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
+										style={{ backgroundColor: color }}
+										key={`${color}-${jarIndex}-${ballIndex}`}
+									/>
+								))}
+							</button>
+						))}
+						{showLevelComplete && (
+							<div className="levelSuccess" data-testid="level-complete" aria-live="polite">
+								<span />
+								<span />
+								<span />
+								<strong>Level complete</strong>
+							</div>
+						)}
+						{dragState && <span className="dragGhost" style={{ backgroundColor: dragState.color, left: dragState.x, top: dragState.y }} aria-hidden="true" />}
+					</section>
+				</main>
 			</PageShell>
 		</>
 	);
