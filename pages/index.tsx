@@ -10,6 +10,7 @@ const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 3;
 const ballsPerColor = 3;
 const jarCount = 6;
+const difficultyRange = [6, 7, 8, 9];
 
 const shuffle = <T,>(items: T[]) => {
 	const shuffledItems = [...items];
@@ -26,6 +27,24 @@ const hasMixedJar = (jars: string[][]) => jars.some((jar) => new Set(jar).size >
 
 const cloneJars = (jars: string[][]) => jars.map((jar) => [...jar]);
 
+const serializeJars = (jars: string[][]) => jars.map((jar) => jar.join(',')).join('|');
+
+const createJarAssignments = () => {
+	const assign = (remainingColors: string[]): string[][] => {
+		if (remainingColors.length === 1) {
+			return [remainingColors];
+		}
+
+		return remainingColors.flatMap((color, colorIndex) =>
+			assign([...remainingColors.slice(0, colorIndex), ...remainingColors.slice(colorIndex + 1)]).map((nextColors) => [color, ...nextColors])
+		);
+	};
+
+	return Array.from({ length: jarCount }, (_, emptyJarIndex) => assign(colors).map((assignedColors) => ({ assignedColors, emptyJarIndex }))).flat();
+};
+
+const jarAssignments = createJarAssignments();
+
 const createFallbackLevel = () => [
 	[colors[0], colors[1], colors[2]],
 	[colors[1], colors[2], colors[3]],
@@ -35,39 +54,47 @@ const createFallbackLevel = () => [
 	[],
 ];
 
-const calculateMinimumTurns = (jars: string[][]) => {
+const calculateRequiredMoveLowerBound = (jars: string[][]) => {
 	let mostBallsAlreadyInFinalJars = 0;
 
-	const assignColorToJar = (colorIndex: number, usedJarIndexes: Set<number>, keptBalls: number) => {
-		if (colorIndex === colors.length) {
-			mostBallsAlreadyInFinalJars = Math.max(mostBallsAlreadyInFinalJars, keptBalls);
-			return;
-		}
+	jarAssignments.forEach(({ assignedColors, emptyJarIndex }) => {
+		let keptBalls = 0;
+		let colorIndex = 0;
 
 		for (let jarIndex = 0; jarIndex < jarCount; jarIndex += 1) {
-			if (usedJarIndexes.has(jarIndex)) {
+			if (jarIndex === emptyJarIndex) {
 				continue;
 			}
 
-			usedJarIndexes.add(jarIndex);
-			assignColorToJar(colorIndex + 1, usedJarIndexes, keptBalls + jars[jarIndex].filter((color) => color === colors[colorIndex]).length);
-			usedJarIndexes.delete(jarIndex);
+			const assignedColor = assignedColors[colorIndex];
+			keptBalls += jars[jarIndex].filter((color) => color === assignedColor).length;
+			colorIndex += 1;
 		}
-	};
 
-	assignColorToJar(0, new Set<number>(), 0);
+		mostBallsAlreadyInFinalJars = Math.max(mostBallsAlreadyInFinalJars, keptBalls);
+	});
 
 	return colors.length * ballsPerColor - mostBallsAlreadyInFinalJars;
 };
 
+const calculateMinimumTurns = (jars: string[][], knownSolutionTurns: number) => {
+	const requiredMoveLowerBound = calculateRequiredMoveLowerBound(jars);
+
+	if (requiredMoveLowerBound === knownSolutionTurns) {
+		return requiredMoveLowerBound;
+	}
+
+	return null;
+};
+
 const createSolvedLevel = () => [...colors.map((color) => Array.from({ length: ballsPerColor }, () => color)), []];
 
-const createScrambledLevel = (turns: number) => {
+const createScrambledLevel = (minimumTurns: number) => {
 	let nextJars = createSolvedLevel();
-	let previousMove: [number, number] | null = null;
+	const seenStates = new Set([serializeJars(nextJars)]);
 
-	for (let turn = 0; turn < turns; turn += 1) {
-		const availableMoves: Array<[number, number]> = [];
+	for (let turn = 0; turn < minimumTurns; turn += 1) {
+		const candidates: string[][][] = [];
 
 		for (let sourceJar = 0; sourceJar < jarCount; sourceJar += 1) {
 			if (nextJars[sourceJar].length === 0) {
@@ -75,48 +102,50 @@ const createScrambledLevel = (turns: number) => {
 			}
 
 			for (let targetJar = 0; targetJar < jarCount; targetJar += 1) {
-				if (
-					sourceJar === targetJar ||
-					nextJars[targetJar].length >= jarCapacity ||
-					(previousMove !== null && previousMove[0] === targetJar && previousMove[1] === sourceJar)
-				) {
+				if (sourceJar === targetJar || nextJars[targetJar].length >= jarCapacity) {
 					continue;
 				}
 
-				availableMoves.push([sourceJar, targetJar]);
+				const candidateJars = cloneJars(nextJars);
+				const movingBall = candidateJars[sourceJar].pop();
+
+				if (!movingBall) {
+					continue;
+				}
+
+				candidateJars[targetJar].push(movingBall);
+
+				const stateKey = serializeJars(candidateJars);
+				if (!seenStates.has(stateKey) && calculateRequiredMoveLowerBound(candidateJars) === turn + 1) {
+					candidates.push(candidateJars);
+				}
 			}
 		}
 
-		const [sourceJar, targetJar] = shuffle(availableMoves)[0];
-		const movingBall = nextJars[sourceJar].pop();
-
-		if (!movingBall) {
-			continue;
+		if (candidates.length === 0) {
+			return null;
 		}
 
-		nextJars = cloneJars(nextJars);
-		nextJars[targetJar].push(movingBall);
-		previousMove = [sourceJar, targetJar];
+		nextJars = shuffle(candidates)[0];
+		seenStates.add(serializeJars(nextJars));
 	}
 
 	return nextJars;
 };
 
 const createLevel = () => {
-	const targetMinimumTurns = 6 + Math.floor(Math.random() * 5);
+	const targetMinimumTurns = shuffle(difficultyRange)[0];
 
 	for (let attempt = 0; attempt < 200; attempt += 1) {
-		const scrambleTurns = 18 + targetMinimumTurns * 3 + Math.floor(Math.random() * 12);
-		const nextJars = createScrambledLevel(scrambleTurns);
-		const minimumTurns = calculateMinimumTurns(nextJars);
+		const nextJars = createScrambledLevel(targetMinimumTurns);
+		const minimumTurns = nextJars === null ? null : calculateMinimumTurns(nextJars, targetMinimumTurns);
 
-		if (minimumTurns === targetMinimumTurns && hasMixedJar(nextJars)) {
+		if (nextJars !== null && minimumTurns !== null && hasMixedJar(nextJars)) {
 			return { jars: nextJars, minimumTurns };
 		}
 	}
 
-	const fallbackJars = createFallbackLevel();
-	return { jars: fallbackJars, minimumTurns: calculateMinimumTurns(fallbackJars) };
+	return { jars: createSolvedLevel(), minimumTurns: 0 };
 };
 
 const isLevelSolved = (jars: string[][]) =>
@@ -138,7 +167,7 @@ type DragState = {
 export default function HomePage() {
 	const [jars, setJars] = useState(() => createFallbackLevel());
 	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
-	const [moveBudget, setMoveBudget] = useState(() => calculateMinimumTurns(createFallbackLevel()));
+	const [moveBudget, setMoveBudget] = useState(0);
 	const [movesUsed, setMovesUsed] = useState(0);
 	const [dragSourceJar, setDragSourceJar] = useState<number | null>(null);
 	const [hoverJar, setHoverJar] = useState<number | null>(null);
