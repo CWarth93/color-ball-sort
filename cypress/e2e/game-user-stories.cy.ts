@@ -133,7 +133,7 @@ describe('Color Ball Sort endless game', () => {
 				expect(loadingCenterY).to.be.closeTo(boardRect.top + boardRect.height / 2, 12);
 			});
 		});
-		cy.get(selectors.movesLoading).should('contain.text', 'Moves loading');
+		cy.get(selectors.movesLoading).should('contain.text', 'Loading');
 		cy.get(selectors.movesUsed).should('not.exist');
 		cy.get(selectors.movesMax).should('not.exist');
 		cy.get(selectors.ball).should('not.exist');
@@ -159,6 +159,7 @@ describe('Color Ball Sort endless game', () => {
 		cy.contains('a', 'Imprint').should('be.visible');
 		cy.get(selectors.movesUsed).should('contain.text', '0');
 		cy.get(selectors.movesMax).invoke('text').then(Number).should('be.greaterThan', 0);
+		cy.get(selectors.movesMax).parent().should('not.contain.text', 'Moves');
 		cy.get(selectors.undoTurn).should('be.disabled');
 		cy.get(selectors.gameBoard).find('canvas').should('be.visible');
 	});

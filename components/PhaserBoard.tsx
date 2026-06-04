@@ -109,13 +109,13 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, the
 							: hexToNumber(this.themeState.jarFill);
 
 						jarShape.clear();
-						jarShape.lineStyle(isSelected ? 5 : isHovered ? 4 : 3, borderColor, isSelected ? 0.95 : 0.72);
+						jarShape.lineStyle(isSelected ? 7 : isHovered ? 6 : 4, borderColor, isSelected ? 1 : isHovered ? 0.92 : 0.82);
 						jarShape.fillStyle(glassFill, isSelected ? 0.66 : 0.42);
 						jarShape.fillRoundedRect(-jarWidth / 2, jarTop, jarWidth, jarInnerHeight, 22);
 						jarShape.strokeRoundedRect(-jarWidth / 2, jarTop, jarWidth, jarInnerHeight, 22);
-						jarShape.lineStyle(2, 0xffffff, isSelected ? 0.28 : 0.18);
+						jarShape.lineStyle(3, 0xffffff, isSelected ? 0.34 : 0.22);
 						jarShape.lineBetween(-jarWidth * 0.22, jarTop + 18, -jarWidth * 0.22, jarBottom - 12);
-						jarShape.lineStyle(1, 0xffffff, isSelected ? 0.22 : 0.14);
+						jarShape.lineStyle(2, 0xffffff, isSelected ? 0.24 : 0.16);
 						for (let slotIndex = 1; slotIndex < jarCapacity; slotIndex += 1) {
 							const separatorY = jarBottom - slotHeight * slotIndex;
 							jarShape.lineBetween(-jarWidth / 2 + 14, separatorY, jarWidth / 2 - 14, separatorY);
@@ -200,8 +200,8 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, the
 							if (ballStyle) {
 								this.add
 									.image(ballX, ballY, getIconKey(this.themeState.id, color))
-									.setDisplaySize(ballRadius * 1.08, ballRadius * 1.08)
-									.setAlpha(0.86);
+									.setDisplaySize(ballRadius * 1.32, ballRadius * 1.32)
+									.setAlpha(1);
 							}
 
 							if (isTopBall) {

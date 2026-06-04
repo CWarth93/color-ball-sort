@@ -241,10 +241,10 @@ export default function HomePage() {
 						<div className="moveHud" data-blocked={isMoveLimitBlocking ? 'true' : 'false'} aria-label="Move counter">
 							{boardReady ? (
 								<>
-									Moves <strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
+									<strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
 								</>
 							) : (
-								<span data-testid="moves-loading">Moves loading</span>
+								<span data-testid="moves-loading">Loading</span>
 							)}
 						</div>
 					</div>

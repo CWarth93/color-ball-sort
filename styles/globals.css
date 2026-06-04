@@ -2,15 +2,16 @@
 	color-scheme: dark;
 	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
 	--font-display: Impact, 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
-	--page-bg: radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.32), transparent 18rem),
-		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.28), transparent 17rem), linear-gradient(180deg, #240a42 0%, #13091f 48%, #070414 100%);
+	--page-bg: linear-gradient(rgba(53, 243, 255, 0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 79, 216, 0.12) 1px, transparent 1px),
+		radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.48), transparent 18rem),
+		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.38), transparent 17rem), linear-gradient(180deg, #2b064f 0%, #13001f 50%, #05000f 100%);
 	--page-text: #fff7ff;
 	--muted-text: #ffd1f7;
 	--accent: #35f3ff;
 	--accent-strong: #ffe66d;
-	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.12), rgba(53, 243, 255, 0.08)), rgba(19, 9, 31, 0.88);
-	--board-bg: #13091f;
-	--panel-border: rgba(255, 209, 247, 0.46);
+	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.22), rgba(53, 243, 255, 0.12)), rgba(22, 0, 34, 0.9);
+	--board-bg: #160022;
+	--panel-border: rgba(255, 159, 243, 0.72);
 	--control-bg: rgba(19, 9, 31, 0.78);
 	--control-border: rgba(53, 243, 255, 0.42);
 	--button-bg: rgba(255, 79, 216, 0.16);
@@ -18,7 +19,7 @@
 	--success-bg: rgba(19, 9, 31, 0.78);
 	--success-text: #fff7ff;
 	--success-border: rgba(53, 243, 255, 0.72);
-	--theme-shadow: 0 0.9rem 2.4rem rgba(255, 79, 216, 0.18), 0 0 2.2rem rgba(53, 243, 255, 0.14);
+	--theme-shadow: 0 0.9rem 2.8rem rgba(255, 79, 216, 0.34), 0 0 3rem rgba(53, 243, 255, 0.2);
 	font-family: var(--font-main);
 	background: var(--page-bg);
 	color: var(--page-text);
@@ -27,15 +28,16 @@
 html[data-theme='vaporwave'] {
 	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
 	--font-display: Impact, 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
-	--page-bg: radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.32), transparent 18rem),
-		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.28), transparent 17rem), linear-gradient(180deg, #240a42 0%, #13091f 48%, #070414 100%);
+	--page-bg: linear-gradient(rgba(53, 243, 255, 0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 79, 216, 0.12) 1px, transparent 1px),
+		radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.48), transparent 18rem),
+		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.38), transparent 17rem), linear-gradient(180deg, #2b064f 0%, #13001f 50%, #05000f 100%);
 	--page-text: #fff7ff;
 	--muted-text: #ffd1f7;
 	--accent: #35f3ff;
 	--accent-strong: #ffe66d;
-	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.12), rgba(53, 243, 255, 0.08)), rgba(19, 9, 31, 0.88);
-	--board-bg: #13091f;
-	--panel-border: rgba(255, 209, 247, 0.46);
+	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.22), rgba(53, 243, 255, 0.12)), rgba(22, 0, 34, 0.9);
+	--board-bg: #160022;
+	--panel-border: rgba(255, 159, 243, 0.72);
 	--control-bg: rgba(19, 9, 31, 0.78);
 	--control-border: rgba(53, 243, 255, 0.42);
 	--button-bg: rgba(255, 79, 216, 0.16);
@@ -43,7 +45,7 @@ html[data-theme='vaporwave'] {
 	--success-bg: rgba(19, 9, 31, 0.78);
 	--success-text: #fff7ff;
 	--success-border: rgba(53, 243, 255, 0.72);
-	--theme-shadow: 0 0.9rem 2.4rem rgba(255, 79, 216, 0.18), 0 0 2.2rem rgba(53, 243, 255, 0.14);
+	--theme-shadow: 0 0.9rem 2.8rem rgba(255, 79, 216, 0.34), 0 0 3rem rgba(53, 243, 255, 0.2);
 }
 
 * {
@@ -54,6 +56,8 @@ body {
 	margin: 0;
 	min-width: 320px;
 	background: var(--page-bg);
+	background-attachment: fixed;
+	background-size: 4rem 4rem, 4rem 4rem, auto, auto, auto;
 }
 
 a {
@@ -135,7 +139,7 @@ h1 {
 	font-family: var(--font-display);
 	font-size: clamp(2.5rem, 5vw, 4.5rem);
 	line-height: 0.95;
-	text-shadow: 0 0 1.2rem rgba(255, 79, 216, 0.28), 0 0 2rem rgba(53, 243, 255, 0.18);
+	text-shadow: 0 0 0.45rem rgba(255, 255, 255, 0.58), 0 0 1.4rem rgba(255, 79, 216, 0.72), 0 0 2.8rem rgba(53, 243, 255, 0.38);
 	text-align: center;
 	transform: translateX(-50%);
 }
@@ -302,10 +306,10 @@ h1 {
 	min-height: 0;
 	aspect-ratio: 920 / 448;
 	padding: 1.25rem;
-	border: 1px solid var(--panel-border);
+	border: 2px solid var(--panel-border);
 	border-radius: 8px;
 	background: var(--panel-bg);
-	box-shadow: var(--theme-shadow);
+	box-shadow: inset 0 0 2rem rgba(255, 79, 216, 0.16), var(--theme-shadow);
 }
 
 .gameBoard[data-move-blocked='true'] {
@@ -473,10 +477,10 @@ h1 {
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	width: 56%;
-	height: 56%;
+	width: 72%;
+	height: 72%;
 	object-fit: contain;
-	opacity: 0.86;
+	opacity: 1;
 	transform: translate(-50%, -50%);
 }
 
@@ -493,8 +497,9 @@ h1 {
 
 .themePicker strong {
 	font-size: 0.82rem;
+	color: var(--page-text);
 	text-transform: uppercase;
-	text-shadow: 0 0 0.8rem rgba(255, 79, 216, 0.5);
+	text-shadow: 0 0 0.45rem rgba(255, 255, 255, 0.54), 0 0 0.95rem rgba(255, 79, 216, 0.7);
 }
 
 .themeOptions {
@@ -505,13 +510,13 @@ h1 {
 .themeOption {
 	display: grid;
 	place-items: center;
-	width: 2.5rem;
+	width: 2.75rem;
 	aspect-ratio: 1;
 	border: 1px solid var(--button-border);
 	border-radius: 8px;
 	background: var(--button-bg);
 	cursor: pointer;
-	box-shadow: var(--theme-shadow);
+	box-shadow: 0 0 1.1rem rgba(255, 79, 216, 0.34), 0 0 1rem rgba(53, 243, 255, 0.18);
 }
 
 .themeOption[aria-pressed='true'] {
@@ -520,8 +525,8 @@ h1 {
 }
 
 .themeOption img {
-	width: 1.8rem;
-	height: 1.8rem;
+	width: 2.05rem;
+	height: 2.05rem;
 	object-fit: contain;
 }
 
