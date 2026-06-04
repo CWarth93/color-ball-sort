@@ -1,9 +1,8 @@
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
-
-import { PageShell } from '../components/PageShell';
 
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
 
@@ -79,15 +78,10 @@ export default function HomePage() {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
-	const [settingsOpen, setSettingsOpen] = useState(false);
-	const [soundEnabled, setSoundEnabled] = useState(true);
-	const [motionEnabled, setMotionEnabled] = useState(true);
 
 	useEffect(() => {
 		setJars(createLevel());
 		setBoardReady(true);
-		setSoundEnabled(window.localStorage.getItem('sound-enabled') !== 'false');
-		setMotionEnabled(window.localStorage.getItem('motion-enabled') !== 'false');
 	}, []);
 
 	useEffect(() => {
@@ -208,50 +202,14 @@ export default function HomePage() {
 		setDragState(null);
 	};
 
-	const toggleSound = () => {
-		setSoundEnabled((currentValue) => {
-			const nextValue = !currentValue;
-			window.localStorage.setItem('sound-enabled', String(nextValue));
-			return nextValue;
-		});
-	};
-
-	const toggleMotion = () => {
-		setMotionEnabled((currentValue) => {
-			const nextValue = !currentValue;
-			window.localStorage.setItem('motion-enabled', String(nextValue));
-			return nextValue;
-		});
-	};
-
 	return (
 		<>
 			<Head>
 				<title>Color Ball Sort</title>
 				<meta name="description" content="An endless color ball sorting puzzle built with Next.js, TypeScript, React, and Phaser." />
 			</Head>
-			<PageShell>
-				<div className="settingsBar">
-					<button className="secondaryButton" data-testid="settings" type="button" onClick={() => setSettingsOpen((currentValue) => !currentValue)}>
-						Settings
-					</button>
-					{settingsOpen && (
-						<div className="settingsPanel" aria-label="Settings">
-							<button data-testid="sound-toggle" type="button" aria-pressed={soundEnabled} onClick={toggleSound}>
-								Sound {soundEnabled ? 'On' : 'Off'}
-							</button>
-							<button data-testid="motion-toggle" type="button" aria-pressed={motionEnabled} onClick={toggleMotion}>
-								Motion {motionEnabled ? 'On' : 'Off'}
-							</button>
-						</div>
-					)}
-				</div>
-				<main className="gameScreen">
-					<section className="gameTitle" aria-label="Current level">
-						<p className="eyebrow">Endless puzzle</p>
-						<h1>Color Ball Sort</h1>
-						<strong data-testid="level-label">Level {level}</strong>
-					</section>
+			<main className="gameScreen">
+				<div className="gameStage">
 					<section
 						className="gameBoard"
 						data-testid="game-board"
@@ -264,13 +222,7 @@ export default function HomePage() {
 							}
 						}}
 					>
-						<PhaserBoard
-							jars={jars}
-							activeJar={dragSourceJar}
-							hoverJar={hoverJar}
-							onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)}
-							motionEnabled={motionEnabled}
-						/>
+						<PhaserBoard jars={jars} activeJar={dragSourceJar} hoverJar={hoverJar} onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)} />
 						{jars.map((jar, jarIndex) => (
 							<button
 								className="gameJar"
@@ -314,8 +266,11 @@ export default function HomePage() {
 						)}
 						{dragState && <span className="dragGhost" style={{ backgroundColor: dragState.color, left: dragState.x, top: dragState.y }} aria-hidden="true" />}
 					</section>
-				</main>
-			</PageShell>
+				</div>
+				<Link href="/imprint" className="imprintLink">
+					Imprint
+				</Link>
+			</main>
 		</>
 	);
 }

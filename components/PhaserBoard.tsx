@@ -5,7 +5,6 @@ type PhaserBoardProps = {
 	activeJar: number | null;
 	hoverJar: number | null;
 	onBallDrop: (sourceJar: number, targetJar: number) => void;
-	motionEnabled: boolean;
 };
 
 type PhaserNamespace = typeof import('phaser');
@@ -16,14 +15,13 @@ type SceneInstance = import('phaser').Scene & {
 	activeJarState?: number | null;
 	hoverJarState?: number | null;
 	onBallDropState?: (sourceJar: number, targetJar: number) => void;
-	motionEnabledState?: boolean;
 };
 
 const boardWidth = 920;
 const boardHeight = 448;
 const jarCapacity = 3;
 
-export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, motionEnabled }: PhaserBoardProps) {
+export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: PhaserBoardProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const gameRef = useRef<GameInstance | null>(null);
 	const sceneRef = useRef<SceneInstance | null>(null);
@@ -47,7 +45,6 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, mot
 				activeJarState = activeJar;
 				hoverJarState = hoverJar;
 				onBallDropState = onBallDrop;
-				motionEnabledState = motionEnabled;
 				dragSourceJarState: number | null = null;
 				jarContainers = new Map<number, Phaser.GameObjects.Container>();
 				jarShapes = new Map<number, Phaser.GameObjects.Graphics>();
@@ -268,9 +265,8 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, mot
 		scene.activeJarState = activeJar;
 		scene.hoverJarState = hoverJar;
 		scene.onBallDropState = onBallDrop;
-		scene.motionEnabledState = motionEnabled;
 		scene.renderBoard?.();
-	}, [jars, activeJar, hoverJar, onBallDrop, motionEnabled]);
+	}, [jars, activeJar, hoverJar, onBallDrop]);
 
 	return <div className="phaserBoard" ref={containerRef} aria-hidden="true" />;
 }

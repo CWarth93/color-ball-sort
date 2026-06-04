@@ -2,11 +2,7 @@ const selectors = {
 	gameBoard: '[data-testid="game-board"]',
 	jar: (index: number) => `[data-testid="jar-${index}"]`,
 	ball: '[data-testid="ball"]',
-	levelLabel: '[data-testid="level-label"]',
 	levelComplete: '[data-testid="level-complete"]',
-	settings: '[data-testid="settings"]',
-	soundToggle: '[data-testid="sound-toggle"]',
-	motionToggle: '[data-testid="motion-toggle"]',
 };
 
 const startGame = () => {
@@ -86,11 +82,14 @@ describe('Color Ball Sort endless game', () => {
 	it('starts directly on the endless game board', () => {
 		startGame();
 
-		cy.contains('h1', 'Color Ball Sort').should('be.visible');
-		cy.get(selectors.levelLabel).should('contain.text', 'Level 1');
+		cy.contains('Endless puzzle').should('not.exist');
+		cy.contains('h1', 'Color Ball Sort').should('not.exist');
+		cy.contains('Level 1').should('not.exist');
+		cy.get('[data-testid="settings"]').should('not.exist');
 		cy.get('[data-testid="start-sprint"]').should('not.exist');
 		cy.get('[data-testid="timer"]').should('not.exist');
 		cy.get('[data-testid="score"]').should('not.exist');
+		cy.contains('a', 'Imprint').should('be.visible');
 		cy.get(selectors.gameBoard).find('canvas').should('be.visible');
 	});
 
@@ -215,7 +214,7 @@ describe('Color Ball Sort endless game', () => {
 			const rect = $jar[0].getBoundingClientRect();
 
 			expect(rect.width).to.be.greaterThan(44);
-			expect(rect.height).to.be.greaterThan(120);
+			expect(rect.height).to.be.greaterThan(100);
 		});
 
 		findAvailableMove().then(({ sourceJar, targetJar }) => {
@@ -232,20 +231,20 @@ describe('Color Ball Sort endless game', () => {
 			const boardCenter = rect.left + rect.width / 2;
 
 			expect(boardCenter).to.be.closeTo(720, 80);
-			expect(rect.width).to.be.lessThan(960);
+			expect(rect.width).to.be.greaterThan(1320);
 		});
 	});
 
-	it('persists sound and motion preferences between sessions', () => {
-		cy.visit('/');
-		cy.get(selectors.settings).click();
-		cy.get(selectors.soundToggle).click();
-		cy.get(selectors.motionToggle).click();
+	it('keeps the board as the dominant full-screen surface', () => {
+		cy.viewport(1440, 900);
+		startGame();
 
-		cy.reload();
+		cy.get(selectors.gameBoard).then(($board) => {
+			const rect = $board[0].getBoundingClientRect();
 
-		cy.get(selectors.settings).click();
-		cy.get(selectors.soundToggle).should('have.attr', 'aria-pressed', 'false');
-		cy.get(selectors.motionToggle).should('have.attr', 'aria-pressed', 'false');
+			expect(rect.width).to.be.greaterThan(1320);
+			expect(rect.height).to.be.greaterThan(650);
+			expect(rect.top).to.be.lessThan(20);
+		});
 	});
 });
