@@ -68,7 +68,7 @@ const isLevelSolved = (jars: string[][]) =>
 			return true;
 		}
 
-		return jar.every((color) => color === jar[0]);
+		return jar.length === ballsPerColor && jar.every((color) => color === jar[0]);
 	});
 
 type DragState = {
