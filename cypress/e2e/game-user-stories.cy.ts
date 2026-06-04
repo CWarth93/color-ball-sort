@@ -3,7 +3,6 @@ const selectors = {
 	jar: (index: number) => `[data-testid="jar-${index}"]`,
 	ball: '[data-testid="ball"]',
 	levelComplete: '[data-testid="level-complete"]',
-	levelFailed: '[data-testid="level-failed"]',
 	movesUsed: '[data-testid="moves-used"]',
 	movesMax: '[data-testid="moves-max"]',
 	undoTurn: '[data-testid="undo-turn"]',
@@ -177,7 +176,7 @@ describe('Color Ball Sort endless game', () => {
 		});
 	});
 
-	it('fails the level when the exact move budget is exceeded', () => {
+	it('blocks further moves and highlights undo when the move budget is exceeded', () => {
 		startGame();
 
 		cy.get(selectors.movesMax)
@@ -186,8 +185,37 @@ describe('Color Ball Sort endless game', () => {
 				spendMoves(Number(moveBudgetText) + 1);
 			});
 
-		cy.get(selectors.levelFailed).should('be.visible').and('contain.text', 'Level failed');
-		cy.get(selectors.movesUsed).should('contain.text', '0');
+		cy.get(selectors.gameBoard).should('have.attr', 'data-move-blocked', 'true');
+		cy.get(selectors.undoTurn).should('have.attr', 'data-highlighted', 'true').and('not.be.disabled');
+		cy.contains('Level failed').should('not.exist');
+		readBoardSignature().as('blockedSignature');
+
+		findAvailableMove().then(({ sourceJar }) => {
+			cy.get(selectors.jar(sourceJar))
+				.find(`${selectors.ball}[data-top="true"]`)
+				.then(($ball) => {
+					const rect = $ball[0].getBoundingClientRect();
+
+					cy.wrap($ball).trigger('pointerdown', {
+						pointerId: 1,
+						pointerType: 'mouse',
+						button: 0,
+						buttons: 1,
+						clientX: rect.left + rect.width / 2,
+						clientY: rect.top + rect.height / 2,
+					});
+				});
+		});
+		cy.get('.dragGhost').should('not.exist');
+		cy.get<string>('@blockedSignature').then((blockedSignature) => {
+			readBoardSignature().should((nextSignature) => {
+				expect(nextSignature).to.equal(blockedSignature);
+			});
+		});
+
+		cy.get(selectors.undoTurn).click();
+		cy.get(selectors.gameBoard).should('have.attr', 'data-move-blocked', 'false');
+		cy.get(selectors.undoTurn).should('have.attr', 'data-highlighted', 'false');
 	});
 
 	it('keeps the dragged ball attached to mouse input', () => {

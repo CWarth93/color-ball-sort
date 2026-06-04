@@ -141,8 +141,15 @@ h1 {
 	opacity: 0.45;
 }
 
-.levelSuccess,
-.levelFailure {
+.undoButton[data-highlighted='true'] {
+	border-color: rgba(255, 209, 102, 0.85);
+	background: rgba(255, 209, 102, 0.18);
+	color: #ffe8a8;
+	box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.42);
+	animation: undoPulse 900ms ease-in-out infinite;
+}
+
+.levelSuccess {
 	position: absolute;
 	inset: 0;
 	z-index: 30;
@@ -155,8 +162,7 @@ h1 {
 	pointer-events: none;
 }
 
-.levelSuccess strong,
-.levelFailure strong {
+.levelSuccess strong {
 	position: relative;
 	z-index: 2;
 	border: 1px solid rgba(101, 212, 110, 0.5);
@@ -169,13 +175,7 @@ h1 {
 	animation: successPop 900ms ease-out both;
 }
 
-.levelFailure strong {
-	border-color: rgba(255, 90, 111, 0.55);
-	color: #ffd6dc;
-}
-
-.levelSuccess span,
-.levelFailure span {
+.levelSuccess span {
 	position: absolute;
 	width: 8rem;
 	aspect-ratio: 1;
@@ -184,27 +184,13 @@ h1 {
 	animation: successRing 1100ms ease-out both;
 }
 
-.levelFailure span {
-	border-color: rgba(255, 90, 111, 0.48);
-}
-
 .levelSuccess span:nth-child(2) {
 	border-color: rgba(73, 198, 229, 0.42);
 	animation-delay: 120ms;
 }
 
-.levelFailure span:nth-child(2) {
-	border-color: rgba(255, 209, 102, 0.42);
-	animation-delay: 120ms;
-}
-
 .levelSuccess span:nth-child(3) {
 	border-color: rgba(255, 209, 102, 0.42);
-	animation-delay: 240ms;
-}
-
-.levelFailure span:nth-child(3) {
-	border-color: rgba(167, 139, 250, 0.42);
 	animation-delay: 240ms;
 }
 
@@ -217,6 +203,12 @@ h1 {
 	to {
 		opacity: 1;
 		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes undoPulse {
+	50% {
+		box-shadow: 0 0 0 0.45rem rgba(255, 209, 102, 0);
 	}
 }
 
@@ -240,6 +232,11 @@ h1 {
 	border: 1px solid rgba(246, 242, 234, 0.14);
 	border-radius: 8px;
 	background: rgba(255, 255, 255, 0.04);
+}
+
+.gameBoard[data-move-blocked='true'] {
+	border-color: rgba(255, 209, 102, 0.34);
+	background: rgba(255, 209, 102, 0.06);
 }
 
 .imprintLink {

@@ -137,7 +137,6 @@ type DragState = {
 
 export default function HomePage() {
 	const [jars, setJars] = useState(() => createFallbackLevel());
-	const [initialJars, setInitialJars] = useState(() => createFallbackLevel());
 	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
 	const [moveBudget, setMoveBudget] = useState(() => calculateMinimumTurns(createFallbackLevel()));
 	const [movesUsed, setMovesUsed] = useState(0);
@@ -147,12 +146,11 @@ export default function HomePage() {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
-	const [showLevelFailed, setShowLevelFailed] = useState(false);
+	const isMoveLimitExceeded = movesUsed > moveBudget;
 
 	useEffect(() => {
 		const nextLevel = createLevel();
 
-		setInitialJars(cloneJars(nextLevel.jars));
 		setJars(nextLevel.jars);
 		setMoveBudget(nextLevel.minimumTurns);
 		setMovesUsed(0);
@@ -198,7 +196,7 @@ export default function HomePage() {
 	}, [dragState, jars]);
 
 	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
-		if (showLevelComplete || showLevelFailed || ballIndex !== jars[jarIndex].length - 1) {
+		if (showLevelComplete || isMoveLimitExceeded || ballIndex !== jars[jarIndex].length - 1) {
 			return;
 		}
 
@@ -241,7 +239,6 @@ export default function HomePage() {
 		window.setTimeout(() => {
 			const generatedLevel = createLevel();
 
-			setInitialJars(cloneJars(generatedLevel.jars));
 			setJars(generatedLevel.jars);
 			setMoveBudget(generatedLevel.minimumTurns);
 			setMovesUsed(0);
@@ -250,21 +247,8 @@ export default function HomePage() {
 		}, 1200);
 	};
 
-	const failLevel = () => {
-		setShowLevelFailed(true);
-		setHoverJar(null);
-		setDragState(null);
-		setDragSourceJar(null);
-		window.setTimeout(() => {
-			setJars(cloneJars(initialJars));
-			setMovesUsed(0);
-			setTurnHistory([]);
-			setShowLevelFailed(false);
-		}, 1800);
-	};
-
 	const undoTurn = () => {
-		if (showLevelComplete || showLevelFailed || turnHistory.length === 0) {
+		if (showLevelComplete || turnHistory.length === 0) {
 			return;
 		}
 
@@ -279,7 +263,7 @@ export default function HomePage() {
 	};
 
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
-		if (showLevelComplete || showLevelFailed || sourceJar === null || sourceJar === targetJar) {
+		if (showLevelComplete || isMoveLimitExceeded || sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
 			setHoverJar(null);
 			setDragState(null);
@@ -310,12 +294,7 @@ export default function HomePage() {
 		setHoverJar(null);
 		setDragState(null);
 
-		if (nextMovesUsed > moveBudget) {
-			failLevel();
-			return;
-		}
-
-		if (isLevelSolved(nextJars)) {
+		if (nextMovesUsed <= moveBudget && isLevelSolved(nextJars)) {
 			completeLevel();
 		}
 	};
@@ -334,7 +313,8 @@ export default function HomePage() {
 							className="undoButton"
 							data-testid="undo-turn"
 							type="button"
-							disabled={turnHistory.length === 0 || showLevelComplete || showLevelFailed}
+							data-highlighted={isMoveLimitExceeded ? 'true' : 'false'}
+							disabled={turnHistory.length === 0 || showLevelComplete}
 							onClick={undoTurn}
 						>
 							Undo
@@ -348,6 +328,7 @@ export default function HomePage() {
 						data-testid="game-board"
 						data-level={level}
 						data-ready={boardReady ? 'true' : 'false'}
+						data-move-blocked={isMoveLimitExceeded ? 'true' : 'false'}
 						aria-label="Color Ball Sort board"
 						onPointerUp={(event) => {
 							if (event.target === event.currentTarget) {
@@ -395,14 +376,6 @@ export default function HomePage() {
 								<span />
 								<span />
 								<strong>Level complete</strong>
-							</div>
-						)}
-						{showLevelFailed && (
-							<div className="levelFailure" data-testid="level-failed" aria-live="polite">
-								<span />
-								<span />
-								<span />
-								<strong>Level failed</strong>
 							</div>
 						)}
 						{dragState && <span className="dragGhost" style={{ backgroundColor: dragState.color, left: dragState.x, top: dragState.y }} aria-hidden="true" />}
