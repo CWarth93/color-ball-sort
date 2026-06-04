@@ -128,11 +128,6 @@ export default function HomePage() {
 		}
 
 		event.preventDefault();
-		try {
-			event.currentTarget.setPointerCapture(event.pointerId);
-		} catch {
-			// Synthetic pointer events in tests do not always create an active capture target.
-		}
 		setDragSourceJar(jarIndex);
 		setHoverJar(jarIndex);
 		setDragState({
@@ -191,6 +186,9 @@ export default function HomePage() {
 				setScore((currentScore) => currentScore + 100);
 				setLevel(nextLevel);
 				setShowLevelComplete(true);
+				setHoverJar(null);
+				setDragState(null);
+				setDragSourceJar(null);
 				return createLevel(nextLevel);
 			}
 			return nextJars;

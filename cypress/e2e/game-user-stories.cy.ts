@@ -191,6 +191,22 @@ describe('Color Ball Sort user stories', () => {
 		});
 	});
 
+	it('allows dragging again after a completed level creates the next board', () => {
+		startSprint();
+
+		dragTopBallToJar(0, 5);
+		cy.get(selectors.levelComplete).should('be.visible');
+		cy.get(selectors.gameBoard).should('have.attr', 'data-level', '2');
+
+		cy.get(selectors.jar(1)).find(selectors.ball).last().invoke('attr', 'data-color').as('movedColor');
+		dragTopBallToJar(1, 5);
+
+		cy.get<string>('@movedColor').then((movedColor) => {
+			cy.get(selectors.jar(5)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
+		});
+		cy.get(selectors.moves).should('contain.text', '2');
+	});
+
 	it('shows final results after two minutes', () => {
 		startSprint({ useClock: true });
 
