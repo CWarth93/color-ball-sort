@@ -482,13 +482,15 @@ describe('Color Ball Sort endless game', () => {
 		cy.viewport('iphone-6');
 		startGame();
 
-		cy.get(selectors.gameBoard).should('be.visible');
+		cy.get(selectors.gameBoard).should('be.visible').and('have.css', 'user-select', 'none');
 		cy.get(selectors.jar(0)).then(($jar) => {
 			const rect = $jar[0].getBoundingClientRect();
 
 			expect(rect.width).to.be.greaterThan(44);
 			expect(rect.height).to.be.greaterThan(100);
 		});
+		cy.get(selectors.jar(0)).should('have.css', '-webkit-tap-highlight-color', 'rgba(0, 0, 0, 0)').and('have.css', 'user-select', 'none');
+		cy.get(selectors.ball).first().should('have.css', '-webkit-tap-highlight-color', 'rgba(0, 0, 0, 0)').and('have.css', 'user-select', 'none');
 
 		findAvailableMove().then(({ sourceJar, targetJar }) => {
 			dragTopBallToJar(sourceJar, targetJar);
