@@ -324,21 +324,21 @@ export default function HomePage() {
 			</Head>
 			<main className="gameScreen">
 				<h1 className="gameTitle">Color Ball Sort</h1>
-				<div className="moveHud" aria-label="Move counter">
-					<span>
-						Moves <strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
-					</span>
-					<button
-						className="undoButton"
-						data-testid="undo-turn"
-						type="button"
-						disabled={turnHistory.length === 0 || showLevelComplete || showLevelFailed}
-						onClick={undoTurn}
-					>
-						Undo
-					</button>
-				</div>
 				<div className="gameStage">
+					<div className="gameControls">
+						<button
+							className="undoButton"
+							data-testid="undo-turn"
+							type="button"
+							disabled={turnHistory.length === 0 || showLevelComplete || showLevelFailed}
+							onClick={undoTurn}
+						>
+							Undo
+						</button>
+						<div className="moveHud" aria-label="Move counter">
+							Moves <strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
+						</div>
+					</div>
 					<section
 						className="gameBoard"
 						data-testid="game-board"

@@ -309,4 +309,28 @@ describe('Color Ball Sort endless game', () => {
 			expect(boardCenterY).to.be.closeTo(450, 80);
 		});
 	});
+
+	it('positions undo and move counter on the game top corners', () => {
+		cy.viewport(1440, 900);
+		startGame();
+
+		cy.get(selectors.gameBoard).then(($board) => {
+			const boardRect = $board[0].getBoundingClientRect();
+
+			cy.get(selectors.undoTurn).then(($undoButton) => {
+				const undoRect = $undoButton[0].getBoundingClientRect();
+
+				expect(undoRect.left).to.be.closeTo(boardRect.left, 4);
+				expect(undoRect.top).to.be.lessThan(boardRect.top);
+			});
+			cy.get(selectors.movesMax)
+				.parent()
+				.then(($moveHud) => {
+					const moveRect = $moveHud[0].getBoundingClientRect();
+
+					expect(moveRect.right).to.be.closeTo(boardRect.right, 4);
+					expect(moveRect.top).to.be.lessThan(boardRect.top);
+				});
+		});
+	});
 });
