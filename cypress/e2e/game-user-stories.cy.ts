@@ -176,17 +176,21 @@ describe('Color Ball Sort endless game', () => {
 		});
 	});
 
-	it('blocks further moves and highlights undo when the move budget is exceeded', () => {
+	it('blocks further moves and highlights undo when the move budget is reached', () => {
 		startGame();
 
 		cy.get(selectors.movesMax)
 			.invoke('text')
 			.then((moveBudgetText) => {
-				spendMoves(Number(moveBudgetText) + 1);
+				const moveBudget = Number(moveBudgetText);
+
+				spendMoves(moveBudget);
+				cy.get(selectors.movesUsed).should('contain.text', String(moveBudget));
 			});
 
 		cy.get(selectors.gameBoard).should('have.attr', 'data-move-blocked', 'true');
 		cy.get(selectors.undoTurn).should('have.attr', 'data-highlighted', 'true').and('not.be.disabled');
+		cy.get(selectors.movesMax).parent().should('have.attr', 'data-blocked', 'true');
 		cy.contains('Level failed').should('not.exist');
 		readBoardSignature().as('blockedSignature');
 
@@ -212,10 +216,14 @@ describe('Color Ball Sort endless game', () => {
 				expect(nextSignature).to.equal(blockedSignature);
 			});
 		});
+		cy.get(selectors.movesMax).then(($movesMax) => {
+			cy.get(selectors.movesUsed).should('contain.text', $movesMax.text());
+		});
 
 		cy.get(selectors.undoTurn).click();
 		cy.get(selectors.gameBoard).should('have.attr', 'data-move-blocked', 'false');
 		cy.get(selectors.undoTurn).should('have.attr', 'data-highlighted', 'false');
+		cy.get(selectors.movesMax).parent().should('have.attr', 'data-blocked', 'false');
 	});
 
 	it('keeps the dragged ball attached to mouse input', () => {

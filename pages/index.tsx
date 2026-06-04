@@ -146,7 +146,7 @@ export default function HomePage() {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
-	const isMoveLimitExceeded = movesUsed > moveBudget;
+	const isMoveLimitBlocking = movesUsed >= moveBudget && !showLevelComplete;
 
 	useEffect(() => {
 		const nextLevel = createLevel();
@@ -196,7 +196,7 @@ export default function HomePage() {
 	}, [dragState, jars]);
 
 	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
-		if (showLevelComplete || isMoveLimitExceeded || ballIndex !== jars[jarIndex].length - 1) {
+		if (showLevelComplete || isMoveLimitBlocking || ballIndex !== jars[jarIndex].length - 1) {
 			return;
 		}
 
@@ -263,7 +263,7 @@ export default function HomePage() {
 	};
 
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
-		if (showLevelComplete || isMoveLimitExceeded || sourceJar === null || sourceJar === targetJar) {
+		if (showLevelComplete || isMoveLimitBlocking || sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
 			setHoverJar(null);
 			setDragState(null);
@@ -313,13 +313,13 @@ export default function HomePage() {
 							className="undoButton"
 							data-testid="undo-turn"
 							type="button"
-							data-highlighted={isMoveLimitExceeded ? 'true' : 'false'}
+							data-highlighted={isMoveLimitBlocking ? 'true' : 'false'}
 							disabled={turnHistory.length === 0 || showLevelComplete}
 							onClick={undoTurn}
 						>
 							Undo
 						</button>
-						<div className="moveHud" aria-label="Move counter">
+						<div className="moveHud" data-blocked={isMoveLimitBlocking ? 'true' : 'false'} aria-label="Move counter">
 							Moves <strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
 						</div>
 					</div>
@@ -328,7 +328,7 @@ export default function HomePage() {
 						data-testid="game-board"
 						data-level={level}
 						data-ready={boardReady ? 'true' : 'false'}
-						data-move-blocked={isMoveLimitExceeded ? 'true' : 'false'}
+						data-move-blocked={isMoveLimitBlocking ? 'true' : 'false'}
 						aria-label="Color Ball Sort board"
 						onPointerUp={(event) => {
 							if (event.target === event.currentTarget) {

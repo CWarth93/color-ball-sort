@@ -126,6 +126,16 @@ h1 {
 	color: #f6f2ea;
 }
 
+.moveHud[data-blocked='true'] {
+	border-color: rgba(255, 209, 102, 0.75);
+	background: rgba(255, 209, 102, 0.18);
+	color: #ffe8a8;
+}
+
+.moveHud[data-blocked='true'] strong {
+	color: #ffd166;
+}
+
 .undoButton {
 	border: 1px solid rgba(246, 242, 234, 0.22);
 	border-radius: 8px;
@@ -212,6 +222,12 @@ h1 {
 	}
 }
 
+@keyframes boardBlockedPulse {
+	50% {
+		box-shadow: inset 0 0 0 0.35rem rgba(255, 209, 102, 0.34), 0 0 0 0.35rem rgba(255, 209, 102, 0.08), 0 1rem 3rem rgba(0, 0, 0, 0.34);
+	}
+}
+
 @keyframes successRing {
 	from {
 		opacity: 0.85;
@@ -235,8 +251,21 @@ h1 {
 }
 
 .gameBoard[data-move-blocked='true'] {
-	border-color: rgba(255, 209, 102, 0.34);
-	background: rgba(255, 209, 102, 0.06);
+	border-color: rgba(255, 209, 102, 0.85);
+	background: rgba(255, 209, 102, 0.08);
+	box-shadow: inset 0 0 0 0.28rem rgba(255, 209, 102, 0.24), 0 0 0 0.25rem rgba(255, 209, 102, 0.16), 0 1rem 3rem rgba(0, 0, 0, 0.28);
+	animation: boardBlockedPulse 1100ms ease-in-out infinite;
+}
+
+.gameBoard[data-move-blocked='true']::after {
+	position: absolute;
+	inset: 0.55rem;
+	z-index: 8;
+	border: 2px solid rgba(255, 209, 102, 0.7);
+	border-radius: 8px;
+	background: repeating-linear-gradient(135deg, rgba(255, 209, 102, 0.12) 0, rgba(255, 209, 102, 0.12) 0.35rem, transparent 0.35rem, transparent 0.7rem);
+	content: '';
+	pointer-events: none;
 }
 
 .imprintLink {
