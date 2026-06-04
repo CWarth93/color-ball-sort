@@ -167,21 +167,6 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 								ball.setData('sourceJar', jarIndex);
 							}
 						});
-
-						if (jar.length < jarCapacity) {
-							const freeSlots = jarCapacity - jar.length;
-							jarContainer.add(
-								this.add
-									.text(x + jarWidth / 2, y + 2, `${freeSlots}`, {
-										color: '#9fa9ad',
-										fontFamily: 'system-ui, sans-serif',
-										fontSize: '14px',
-										fontStyle: '700',
-									})
-									.setOrigin(0.5)
-									.setPosition(0, -jarHeight / 2 + 2)
-							);
-						}
 					});
 
 					this.input.off('dragstart');
