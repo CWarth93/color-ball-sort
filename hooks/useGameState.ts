@@ -177,6 +177,16 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 		});
 	};
 
+	const startJarDrag = (event: ReactPointerEvent, jarIndex: number) => {
+		const topBallIndex = jars[jarIndex].length - 1;
+
+		if (topBallIndex < 0) {
+			return;
+		}
+
+		startBallDrag(event, jarIndex, topBallIndex);
+	};
+
 	const moveDragOverJar = (jarIndex: number) => {
 		if (!dragState) {
 			return;
@@ -249,6 +259,7 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 		showLevelComplete,
 		skipLevel,
 		startBallDrag,
+		startJarDrag,
 		turnHistory,
 		undoTurn,
 	};
