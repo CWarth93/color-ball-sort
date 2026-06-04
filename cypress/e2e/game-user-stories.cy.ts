@@ -222,7 +222,7 @@ describe('Color Ball Sort endless game', () => {
 			expect(colors.size).to.equal(5);
 			expect(balls.length).to.equal(15);
 		});
-		cy.get(selectors.movesMax).invoke('text').then(Number).should('be.within', 6, 19);
+		cy.get(selectors.movesMax).invoke('text').then(Number).should('be.within', 5, 19);
 		readBoardSignature().should((signature) => {
 			const jars = signature.split('|');
 			const mixedJars = jars.filter((jar) => {
