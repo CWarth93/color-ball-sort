@@ -1,7 +1,39 @@
 const { MongoClient } = require('mongodb');
-const { ballsPerColor, canonicalColors, databaseName, jarCapacity, levelsCollectionName, logicalColors } = require('../lib/gameConfig.json');
-const { loadLocalEnv } = require('./lib/load-env');
-const { buildExactDistanceBuckets, deserializeCanonicalJars } = require('./lib/solver');
+const { existsSync, readFileSync } = require('fs');
+const { join } = require('path');
+
+const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
+const canonicalColors = ['A', 'B', 'C', 'D', 'E'];
+const jarCapacity = 3;
+const ballsPerColor = 3;
+const jarCount = 6;
+const databaseName = 'color_ball_sort';
+const collectionName = 'levels';
+
+const loadLocalEnv = () => {
+	const envPath = join(process.cwd(), '.env');
+
+	if (!existsSync(envPath)) {
+		return;
+	}
+
+	readFileSync(envPath, 'utf8')
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter((line) => line && !line.startsWith('#'))
+		.forEach((line) => {
+			const separatorIndex = line.indexOf('=');
+
+			if (separatorIndex === -1) {
+				return;
+			}
+
+			const key = line.slice(0, separatorIndex);
+			const value = line.slice(separatorIndex + 1);
+
+			process.env[key] ??= value;
+		});
+};
 
 const levelPlan = [
 	{ difficulty: 'easy', minimumTurns: [6, 7, 8], count: 10 },
@@ -24,8 +56,91 @@ const shuffle = (items) => {
 
 const serializeJars = (jars) => jars.map((jar) => jar.join(',')).join('|');
 
+const deserializeCanonicalJars = (key) => key.split('|').map((jar) => [...jar]);
+
+const canonicalizeJars = (jars) => {
+	const sortedJars = jars.map((jar) => jar.join('')).sort();
+	const colorMap = new Map();
+	let nextColorIndex = 0;
+
+	return sortedJars
+		.map((jar) =>
+			[...jar]
+				.map((color) => {
+					if (!colorMap.has(color)) {
+						colorMap.set(color, canonicalColors[nextColorIndex]);
+						nextColorIndex += 1;
+					}
+
+					return colorMap.get(color);
+				})
+				.join('')
+		)
+		.join('|');
+};
+
+const getCanonicalNextStates = (stateKey) => {
+	const jars = deserializeCanonicalJars(stateKey);
+	const nextStates = [];
+
+	for (let sourceJar = 0; sourceJar < jarCount; sourceJar += 1) {
+		if (jars[sourceJar].length === 0) {
+			continue;
+		}
+
+		for (let targetJar = 0; targetJar < jarCount; targetJar += 1) {
+			if (sourceJar === targetJar || jars[targetJar].length >= jarCapacity) {
+				continue;
+			}
+
+			const nextJars = jars.map((jar) => [...jar]);
+			const movingBall = nextJars[sourceJar].pop();
+
+			nextJars[targetJar].push(movingBall);
+			nextStates.push(canonicalizeJars(nextJars));
+		}
+	}
+
+	return nextStates;
+};
+
+const createCanonicalSolvedLevel = () =>
+	canonicalizeJars([...canonicalColors.map((color) => Array.from({ length: ballsPerColor }, () => color)), []]);
+
+const buildExactDistanceBuckets = () => {
+	const wantedTurns = new Set(levelPlan.flatMap((plan) => plan.minimumTurns));
+	const maxTurns = Math.max(...wantedTurns);
+	const buckets = new Map([...wantedTurns].map((minimumTurns) => [minimumTurns, []]));
+	const seenStates = new Set([createCanonicalSolvedLevel()]);
+	let frontier = [...seenStates];
+
+	for (let turns = 1; turns <= maxTurns; turns += 1) {
+		const nextFrontier = [];
+
+		frontier.forEach((stateKey) => {
+			getCanonicalNextStates(stateKey).forEach((nextStateKey) => {
+				if (seenStates.has(nextStateKey)) {
+					return;
+				}
+
+				seenStates.add(nextStateKey);
+				nextFrontier.push(nextStateKey);
+			});
+		});
+
+		if (buckets.has(turns)) {
+			buckets.set(turns, nextFrontier);
+		}
+
+		console.log(`Solved exact ${turns}-move states: ${nextFrontier.length}`);
+		frontier = nextFrontier;
+	}
+
+	return buckets;
+};
+
 const createLevelFromCanonicalState = (canonicalStateKey, difficulty, minimumTurns, usedKeys) => {
-	const shuffledColors = shuffle(logicalColors);
+	const shuffledColors = shuffle(colors);
 	const colorMap = new Map(canonicalColors.map((color, index) => [color, shuffledColors[index]]));
 	const jars = shuffle(
 		deserializeCanonicalJars(canonicalStateKey).map((jar) =>
@@ -56,14 +171,13 @@ const createLevelFromCanonicalState = (canonicalStateKey, difficulty, minimumTur
 		jars,
 		jarCapacity,
 		ballsPerColor,
-		colors: logicalColors,
+		colors,
 		createdAt: new Date(),
 	};
 };
 
 const createLevels = () => {
-	const wantedTurns = new Set(levelPlan.flatMap((plan) => plan.minimumTurns));
-	const buckets = buildExactDistanceBuckets(wantedTurns);
+	const buckets = buildExactDistanceBuckets();
 	const usedKeys = new Set();
 
 	return levelPlan.flatMap(({ difficulty, minimumTurns, count }) => {
@@ -106,7 +220,7 @@ const main = async () => {
 
 	await client.connect();
 	try {
-		const collection = client.db(databaseName).collection(levelsCollectionName);
+		const collection = client.db(databaseName).collection(collectionName);
 
 		await collection.deleteMany({});
 		await collection.insertMany(levels);

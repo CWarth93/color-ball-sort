@@ -1,9 +1,0 @@
-{
-	"logicalColors": ["#ff5a6f", "#ffd166", "#49c6e5", "#65d46e", "#a78bfa"],
-	"canonicalColors": ["A", "B", "C", "D", "E"],
-	"jarCapacity": 3,
-	"ballsPerColor": 3,
-	"jarCount": 6,
-	"databaseName": "color_ball_sort",
-	"levelsCollectionName": "levels"
-}

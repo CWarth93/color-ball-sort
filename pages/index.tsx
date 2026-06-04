@@ -1,45 +1,268 @@
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useState } from 'react';
 
-import { useGameState } from '../hooks/useGameState';
-import { useThemeSelection } from '../hooks/useThemeSelection';
-import { boardCssVariables } from '../lib/boardGeometry';
-import { jarCapacity } from '../lib/gameConfig';
-import { themes } from '../lib/themes';
+import type { StoredLevel } from '../lib/levelTypes';
+import { themeStorageKey } from '../lib/themeStorage';
+import { defaultTheme, themes } from '../lib/themes';
 
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), {
 	ssr: false,
 });
 
+const jarCapacity = 3;
+const ballsPerColor = 3;
+
+const cloneJars = (jars: string[][]) => jars.map((jar) => [...jar]);
+
+const isLevelSolved = (jars: string[][]) =>
+	jars.every((jar) => {
+		if (jar.length === 0) {
+			return true;
+		}
+
+		return jar.length === ballsPerColor && jar.every((color) => color === jar[0]);
+	});
+
+type DragState = {
+	sourceJar: number;
+	fill: string;
+	icon: string;
+	x: number;
+	y: number;
+};
+
+const loadRandomStoredLevel = async () => {
+	const response = await fetch('/api/levels/random');
+
+	if (!response.ok) {
+		throw new Error('Unable to load a stored level');
+	}
+
+	const data = (await response.json()) as { level: StoredLevel };
+
+	return data.level;
+};
+
 export default function HomePage() {
-	const { activeTheme, selectTheme } = useThemeSelection();
-	const {
-		boardReady,
-		clearDragState,
-		dragSourceJar,
-		dragState,
-		dropBall,
-		endDragOverJar,
-		hoverJar,
-		isLoadingLevel,
-		isMoveLimitBlocking,
-		jars,
-		level,
-		levelError,
-		loadNextLevel,
-		moveBudget,
-		moveDragOverJar,
-		movesUsed,
-		resetLevel,
-		setHoverJar,
-		showLevelComplete,
-		skipLevel,
-		startJarDrag,
-		turnHistory,
-		undoTurn,
-	} = useGameState({ activeTheme });
+	const [jars, setJars] = useState<string[][]>([]);
+	const [initialJars, setInitialJars] = useState<string[][]>([]);
+	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
+	const [moveBudget, setMoveBudget] = useState(0);
+	const [movesUsed, setMovesUsed] = useState(0);
+	const [dragSourceJar, setDragSourceJar] = useState<number | null>(null);
+	const [hoverJar, setHoverJar] = useState<number | null>(null);
+	const [dragState, setDragState] = useState<DragState | null>(null);
+	const [level, setLevel] = useState(1);
+	const [boardReady, setBoardReady] = useState(false);
+	const [showLevelComplete, setShowLevelComplete] = useState(false);
+	const [activeTheme, setActiveTheme] = useState(() => {
+		if (typeof window === 'undefined') {
+			return defaultTheme;
+		}
+
+		const storedThemeId = window.localStorage.getItem(themeStorageKey);
+
+		return themes.find((theme) => theme.id === storedThemeId) ?? defaultTheme;
+	});
+	const isLoadingLevel = !boardReady && !showLevelComplete;
+	const isMoveLimitBlocking = boardReady && movesUsed >= moveBudget && !showLevelComplete;
+
+	useEffect(() => {
+		document.documentElement.dataset.theme = activeTheme.id;
+		window.localStorage.setItem(themeStorageKey, activeTheme.id);
+
+		return () => {
+			delete document.documentElement.dataset.theme;
+		};
+	}, [activeTheme]);
+
+	const selectTheme = (theme: typeof themes[number]) => {
+		document.documentElement.dataset.theme = theme.id;
+		window.localStorage.setItem(themeStorageKey, theme.id);
+		setActiveTheme(theme);
+	};
+
+	const loadNextLevel = async () => {
+		setBoardReady(false);
+		const nextLevel = await loadRandomStoredLevel();
+		const loadedJars = cloneJars(nextLevel.jars);
+
+		setJars(loadedJars);
+		setInitialJars(cloneJars(loadedJars));
+		setMoveBudget(nextLevel.minimumTurns);
+		setMovesUsed(0);
+		setTurnHistory([]);
+		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
+		setBoardReady(true);
+	};
+
+	useEffect(() => {
+		void loadNextLevel();
+	}, []);
+
+	useEffect(() => {
+		if (!dragState) {
+			return undefined;
+		}
+
+		const getHoveredJar = (clientX: number, clientY: number) => {
+			const element = document.elementFromPoint(clientX, clientY);
+			const jarElement = element?.closest<HTMLElement>('[data-jar-index]');
+			const jarIndex = jarElement?.dataset.jarIndex;
+
+			return jarIndex === undefined ? null : Number(jarIndex);
+		};
+		const moveDrag = (event: globalThis.PointerEvent) => {
+			setDragState((currentDragState) => (currentDragState ? { ...currentDragState, x: event.clientX, y: event.clientY } : currentDragState));
+			setHoverJar(getHoveredJar(event.clientX, event.clientY));
+		};
+		const endDrag = (event: globalThis.PointerEvent) => {
+			const targetJar = getHoveredJar(event.clientX, event.clientY);
+
+			if (targetJar !== null) {
+				dropBall(targetJar, dragState.sourceJar);
+			} else {
+				setDragSourceJar(null);
+			}
+			setHoverJar(null);
+			setDragState(null);
+		};
+
+		window.addEventListener('pointermove', moveDrag);
+		window.addEventListener('pointerup', endDrag);
+
+		return () => {
+			window.removeEventListener('pointermove', moveDrag);
+			window.removeEventListener('pointerup', endDrag);
+		};
+	}, [dragState, jars]);
+
+	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
+		if (!boardReady || showLevelComplete || isMoveLimitBlocking || ballIndex !== jars[jarIndex].length - 1) {
+			return;
+		}
+
+		event.preventDefault();
+		const ballStyle = activeTheme.ballStyles[jars[jarIndex][ballIndex]];
+		setDragSourceJar(jarIndex);
+		setHoverJar(jarIndex);
+		setDragState({
+			sourceJar: jarIndex,
+			fill: ballStyle?.fill ?? jars[jarIndex][ballIndex],
+			icon: ballStyle?.icon ?? '',
+			x: event.clientX,
+			y: event.clientY,
+		});
+	};
+
+	const moveDragOverJar = (jarIndex: number) => {
+		if (!dragState) {
+			return;
+		}
+
+		setHoverJar(jarIndex);
+	};
+
+	const endDragOverJar = (event: ReactPointerEvent, jarIndex: number) => {
+		if (!dragState) {
+			return;
+		}
+
+		event.stopPropagation();
+		dropBall(jarIndex, dragState.sourceJar);
+	};
+
+	const completeLevel = () => {
+		const nextLevel = level + 1;
+
+		setLevel(nextLevel);
+		setShowLevelComplete(true);
+		setHoverJar(null);
+		setDragState(null);
+		setDragSourceJar(null);
+		window.setTimeout(() => {
+			void loadNextLevel().finally(() => setShowLevelComplete(false));
+		}, 1200);
+	};
+
+	const undoTurn = () => {
+		if (showLevelComplete || turnHistory.length === 0) {
+			return;
+		}
+
+		const previousJars = turnHistory[turnHistory.length - 1];
+
+		setJars(cloneJars(previousJars));
+		setTurnHistory((currentHistory) => currentHistory.slice(0, -1));
+		setMovesUsed((currentMovesUsed) => Math.max(0, currentMovesUsed - 1));
+		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
+	};
+
+	const resetLevel = () => {
+		if (!boardReady || showLevelComplete || initialJars.length === 0) {
+			return;
+		}
+
+		setJars(cloneJars(initialJars));
+		setTurnHistory([]);
+		setMovesUsed(0);
+		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
+	};
+
+	const skipLevel = () => {
+		if (!boardReady || showLevelComplete) {
+			return;
+		}
+
+		setLevel((currentLevel) => currentLevel + 1);
+		void loadNextLevel();
+	};
+
+	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
+		if (!boardReady || showLevelComplete || isMoveLimitBlocking || sourceJar === null || sourceJar === targetJar) {
+			setDragSourceJar(null);
+			setHoverJar(null);
+			setDragState(null);
+			return;
+		}
+
+		if (jars[targetJar].length >= jarCapacity) {
+			setDragSourceJar(null);
+			setHoverJar(null);
+			setDragState(null);
+			return;
+		}
+
+		const nextJars = cloneJars(jars);
+		const movingBall = nextJars[sourceJar].pop();
+
+		if (!movingBall) {
+			return;
+		}
+
+		nextJars[targetJar].push(movingBall);
+		const nextMovesUsed = movesUsed + 1;
+
+		setTurnHistory((currentHistory) => [...currentHistory, cloneJars(jars)]);
+		setMovesUsed(nextMovesUsed);
+		setJars(nextJars);
+		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
+
+		if (nextMovesUsed <= moveBudget && isLevelSolved(nextJars)) {
+			completeLevel();
+		}
+	};
 
 	return (
 		<>
@@ -75,7 +298,7 @@ export default function HomePage() {
 									<strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
 								</>
 							) : (
-								<span data-testid="moves-loading">{levelError ? 'Error' : 'Loading'}</span>
+								<span data-testid="moves-loading">Loading</span>
 							)}
 						</div>
 					</div>
@@ -85,11 +308,10 @@ export default function HomePage() {
 						data-level={level}
 						data-ready={boardReady ? 'true' : 'false'}
 						data-move-blocked={isMoveLimitBlocking ? 'true' : 'false'}
-						style={boardCssVariables}
 						aria-label="Color Ball Sort board"
 						onPointerUp={(event) => {
 							if (event.target === event.currentTarget) {
-								clearDragState();
+								setDragSourceJar(null);
 							}
 						}}
 					>
@@ -111,10 +333,8 @@ export default function HomePage() {
 										data-empty={jar.length === 0 ? 'true' : 'false'}
 										data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
 										data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
-										style={{ '--jar-index': jarIndex } as CSSProperties}
 										key={`jar-${jarIndex}`}
 										aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
-										onPointerDown={(event) => startJarDrag(event, jarIndex)}
 										onPointerEnter={() => setHoverJar(jarIndex)}
 										onPointerMove={() => moveDragOverJar(jarIndex)}
 										onPointerLeave={() => setHoverJar((currentHoverJar) => (currentHoverJar === jarIndex ? null : currentHoverJar))}
@@ -130,6 +350,7 @@ export default function HomePage() {
 												onDragStart={(event) => {
 													event.preventDefault();
 												}}
+												onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
 												style={{
 													backgroundColor: color,
 													gridRow: jarCapacity - ballIndex,
@@ -145,15 +366,6 @@ export default function HomePage() {
 							<div className="levelLoading" data-testid="level-loading" aria-live="polite">
 								<span />
 								<strong>Loading level</strong>
-							</div>
-						)}
-						{levelError && (
-							<div className="levelError" data-testid="level-error" aria-live="polite">
-								<strong>Level unavailable</strong>
-								<span>{levelError}</span>
-								<button className="actionButton" data-testid="retry-level" type="button" onClick={() => void loadNextLevel()}>
-									Retry
-								</button>
 							</div>
 						)}
 						{showLevelComplete && (

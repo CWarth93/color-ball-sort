@@ -1,11 +1,22 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 import { PageShell } from '../components/PageShell';
-import { useThemeSelection } from '../hooks/useThemeSelection';
+import { themeStorageKey } from '../lib/themeStorage';
+import { defaultTheme, themes } from '../lib/themes';
 
 export default function ImprintPage() {
-	useThemeSelection();
+	useEffect(() => {
+		const storedThemeId = window.localStorage.getItem(themeStorageKey);
+		const theme = themes.find((availableTheme) => availableTheme.id === storedThemeId) ?? defaultTheme;
+
+		document.documentElement.dataset.theme = theme.id;
+
+		return () => {
+			delete document.documentElement.dataset.theme;
+		};
+	}, []);
 
 	return (
 		<>
@@ -19,9 +30,9 @@ export default function ImprintPage() {
 						Christopher Warth
 						<br />
 						<br />
-						Louisenstrasse 54
+						Ziegelstra&szlig;e 3
 						<br />
-						01099 Dresden
+						01069 Dresden
 					</p>
 					<p>
 						Telefon: 015255280055

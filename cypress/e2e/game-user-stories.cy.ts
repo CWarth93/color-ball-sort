@@ -10,8 +10,6 @@ const selectors = {
 	undoTurn: '[data-testid="undo-turn"]',
 	skipLevel: '[data-testid="skip-level"]',
 	levelLoading: '[data-testid="level-loading"]',
-	levelError: '[data-testid="level-error"]',
-	retryLevel: '[data-testid="retry-level"]',
 	vaporwaveTheme: '[data-testid="theme-vaporwave"]',
 	cyberpunkTheme: '[data-testid="theme-cyberpunk"]',
 	lofiTheme: '[data-testid="theme-lofi"]',
@@ -164,60 +162,6 @@ describe('Color Ball Sort endless game', () => {
 		cy.get(selectors.ball).should('have.length', 15);
 	});
 
-	it('shows a retryable error if loading the level fails', () => {
-		cy.intercept(
-			{
-				method: 'GET',
-				url: '/api/levels/random',
-				times: 1,
-			},
-			{
-				statusCode: 500,
-				body: {
-					error: 'temporary database outage',
-				},
-			}
-		).as('failedLevel');
-
-		cy.visit('/');
-		cy.wait('@failedLevel');
-		cy.get(selectors.gameBoard).should('be.visible').and('have.attr', 'data-ready', 'false');
-		cy.get(selectors.levelLoading).should('not.exist');
-		cy.get(selectors.levelError).should('be.visible').and('contain.text', 'Level unavailable').and('contain.text', 'Unable to load a stored level');
-		cy.get(selectors.movesLoading).should('contain.text', 'Error');
-		cy.get(selectors.ball).should('not.exist');
-
-		cy.intercept('GET', '/api/levels/random', {
-			body: {
-				level: {
-					key: 'test-retry-level',
-					difficulty: 'easy',
-					minimumTurns: 8,
-					fastPathCount: 8,
-					jars: [
-						['#ff5a6f', '#ffd166', '#49c6e5'],
-						['#ffd166', '#49c6e5', '#65d46e'],
-						['#49c6e5', '#65d46e', '#a78bfa'],
-						['#65d46e', '#a78bfa', '#ff5a6f'],
-						['#a78bfa', '#ff5a6f', '#ffd166'],
-						[],
-					],
-					jarCapacity: 3,
-					ballsPerColor: 3,
-					colors: ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'],
-				},
-			},
-		}).as('retriedLevel');
-
-		cy.get(selectors.retryLevel).click();
-		cy.wait('@retriedLevel');
-		cy.get(selectors.levelError).should('not.exist');
-		cy.get(selectors.gameBoard).should('have.attr', 'data-ready', 'true');
-		cy.get(selectors.movesUsed).should('contain.text', '0');
-		cy.get(selectors.movesMax).should('contain.text', '8');
-		cy.get(selectors.ball).should('have.length', 15);
-	});
-
 	it('starts directly on the endless game board', () => {
 		startGame();
 
@@ -334,32 +278,6 @@ describe('Color Ball Sort endless game', () => {
 					cy.get(selectors.undoTurn).should('not.be.disabled');
 				});
 		});
-	});
-
-	it('allows dragging the last ball out of a jar', () => {
-		cy.intercept('GET', '/api/levels/random', {
-			body: {
-				level: {
-					key: 'test-empty-source-jar',
-					difficulty: 'easy',
-					minimumTurns: 8,
-					fastPathCount: 8,
-					jars: [['#ff5a6f'], ['#ffd166'], ['#49c6e5'], ['#65d46e'], ['#a78bfa'], []],
-					colors: ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'],
-					ballsPerColor: 3,
-					jarCount: 6,
-					emptyJarCount: 1,
-				},
-			},
-		}).as('loadSingleBallJars');
-
-		startGame();
-		cy.wait('@loadSingleBallJars');
-
-		dragTopBallToJar(0, 5);
-
-		cy.get(selectors.jar(0)).find(selectors.ball).should('have.length', 0);
-		cy.get(selectors.jar(5)).find(selectors.ball).should('have.length', 1);
 	});
 
 	it('undoes turns back to the beginning of the level', () => {
