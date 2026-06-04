@@ -1,0 +1,143 @@
+:root {
+	color-scheme: dark;
+	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Impact, 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
+	--page-bg: linear-gradient(rgba(53, 243, 255, 0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 79, 216, 0.12) 1px, transparent 1px),
+		radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.48), transparent 18rem),
+		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.38), transparent 17rem), linear-gradient(180deg, #2b064f 0%, #13001f 50%, #05000f 100%);
+	--page-text: #fff7ff;
+	--muted-text: #ffd1f7;
+	--accent: #35f3ff;
+	--accent-strong: #ffe66d;
+	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.22), rgba(53, 243, 255, 0.12)), rgba(22, 0, 34, 0.9);
+	--board-bg: #160022;
+	--panel-border: rgba(255, 159, 243, 0.72);
+	--control-bg: rgba(19, 9, 31, 0.78);
+	--control-border: rgba(53, 243, 255, 0.42);
+	--button-bg: rgba(255, 79, 216, 0.16);
+	--button-border: rgba(255, 209, 247, 0.48);
+	--success-bg: rgba(19, 9, 31, 0.78);
+	--success-text: #fff7ff;
+	--success-border: rgba(53, 243, 255, 0.72);
+	--theme-shadow: 0 0.9rem 2.8rem rgba(255, 79, 216, 0.34), 0 0 3rem rgba(53, 243, 255, 0.2);
+	font-family: var(--font-main);
+	background: var(--page-bg);
+	color: var(--page-text);
+}
+
+html[data-theme='vaporwave'] {
+	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Impact, 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
+	--page-bg: linear-gradient(rgba(53, 243, 255, 0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 79, 216, 0.12) 1px, transparent 1px),
+		radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.48), transparent 18rem),
+		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.38), transparent 17rem), linear-gradient(180deg, #2b064f 0%, #13001f 50%, #05000f 100%);
+	--page-text: #fff7ff;
+	--muted-text: #ffd1f7;
+	--accent: #35f3ff;
+	--accent-strong: #ffe66d;
+	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.22), rgba(53, 243, 255, 0.12)), rgba(22, 0, 34, 0.9);
+	--board-bg: #160022;
+	--panel-border: rgba(255, 159, 243, 0.72);
+	--control-bg: rgba(19, 9, 31, 0.78);
+	--control-border: rgba(53, 243, 255, 0.42);
+	--button-bg: rgba(255, 79, 216, 0.16);
+	--button-border: rgba(255, 209, 247, 0.48);
+	--success-bg: rgba(19, 9, 31, 0.78);
+	--success-text: #fff7ff;
+	--success-border: rgba(53, 243, 255, 0.72);
+	--theme-shadow: 0 0.9rem 2.8rem rgba(255, 79, 216, 0.34), 0 0 3rem rgba(53, 243, 255, 0.2);
+}
+
+html[data-theme='cyberpunk'] {
+	--font-main: 'Arial Narrow', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Impact, 'Arial Black', 'Arial Narrow', ui-sans-serif, sans-serif;
+	--page-bg: linear-gradient(135deg, rgba(245, 255, 61, 0.18) 0 0.08rem, transparent 0.08rem 1.4rem),
+		linear-gradient(90deg, rgba(0, 245, 255, 0.14) 1px, transparent 1px), radial-gradient(circle at 18% 16%, rgba(255, 45, 85, 0.34), transparent 16rem),
+		radial-gradient(circle at 82% 20%, rgba(0, 245, 255, 0.28), transparent 18rem), linear-gradient(180deg, #101720 0%, #060910 48%, #020306 100%);
+	--page-text: #f5ff3d;
+	--muted-text: #9efcff;
+	--accent: #00f5ff;
+	--accent-strong: #ff2d55;
+	--panel-bg: linear-gradient(180deg, rgba(245, 255, 61, 0.14), rgba(0, 245, 255, 0.08)), rgba(8, 11, 18, 0.92);
+	--board-bg: #080b12;
+	--panel-border: rgba(245, 255, 61, 0.82);
+	--control-bg: rgba(8, 11, 18, 0.82);
+	--control-border: rgba(0, 245, 255, 0.58);
+	--button-bg: rgba(255, 45, 85, 0.14);
+	--button-border: rgba(245, 255, 61, 0.6);
+	--success-bg: rgba(8, 11, 18, 0.82);
+	--success-text: #f5ff3d;
+	--success-border: rgba(0, 245, 255, 0.82);
+	--theme-shadow: 0 0.9rem 2.6rem rgba(245, 255, 61, 0.2), 0 0 2.8rem rgba(0, 245, 255, 0.2);
+}
+
+html[data-theme='lofi'] {
+	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Georgia, 'Times New Roman', serif;
+	--page-bg: radial-gradient(circle at 16% 18%, rgba(248, 214, 122, 0.28), transparent 12rem),
+		radial-gradient(circle at 82% 14%, rgba(158, 197, 171, 0.24), transparent 16rem),
+		linear-gradient(180deg, rgba(247, 197, 159, 0.09) 0 1px, transparent 1px 3.5rem),
+		linear-gradient(90deg, rgba(158, 197, 171, 0.08) 0 1px, transparent 1px 3.5rem), linear-gradient(180deg, #211b2d 0%, #2f263d 48%, #171322 100%);
+	--page-text: #fff2d8;
+	--muted-text: #d7c0a9;
+	--accent: #9ec5ab;
+	--accent-strong: #f8d67a;
+	--panel-bg: linear-gradient(180deg, rgba(247, 197, 159, 0.18), rgba(158, 197, 171, 0.1)), rgba(33, 27, 45, 0.92);
+	--board-bg: #211b2d;
+	--panel-border: rgba(247, 197, 159, 0.72);
+	--control-bg: rgba(47, 38, 61, 0.82);
+	--control-border: rgba(158, 197, 171, 0.52);
+	--button-bg: rgba(242, 166, 90, 0.15);
+	--button-border: rgba(247, 197, 159, 0.58);
+	--success-bg: rgba(33, 27, 45, 0.82);
+	--success-text: #fff2d8;
+	--success-border: rgba(248, 214, 122, 0.78);
+	--theme-shadow: 0 0.9rem 2.5rem rgba(11, 8, 18, 0.38), 0 0 2rem rgba(248, 214, 122, 0.16);
+}
+
+html[data-theme='poolcore'] {
+	--font-main: 'Verdana', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
+	--page-bg: linear-gradient(rgba(255, 255, 255, 0.46) 2px, transparent 2px), linear-gradient(90deg, rgba(255, 255, 255, 0.46) 2px, transparent 2px),
+		radial-gradient(circle at 18% 20%, rgba(255, 127, 110, 0.32), transparent 14rem),
+		radial-gradient(circle at 82% 16%, rgba(0, 180, 216, 0.28), transparent 16rem), linear-gradient(180deg, #8eeaff 0%, #d7fbff 50%, #6fcfea 100%);
+	--page-text: #005f86;
+	--muted-text: #0077b6;
+	--accent: #00b4d8;
+	--accent-strong: #ff7f6e;
+	--panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(142, 234, 255, 0.28)), rgba(229, 251, 255, 0.88);
+	--board-bg: #e5fbff;
+	--panel-border: rgba(0, 119, 182, 0.76);
+	--control-bg: rgba(229, 251, 255, 0.8);
+	--control-border: rgba(0, 119, 182, 0.52);
+	--button-bg: rgba(255, 127, 110, 0.16);
+	--button-border: rgba(0, 119, 182, 0.54);
+	--success-bg: rgba(229, 251, 255, 0.78);
+	--success-text: #005f86;
+	--success-border: rgba(255, 127, 110, 0.72);
+	--theme-shadow: 0 0.9rem 2.4rem rgba(0, 119, 182, 0.22), 0 0 2.2rem rgba(255, 255, 255, 0.42);
+}
+
+html[data-theme='barbie'] {
+	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Georgia, 'Times New Roman', serif;
+	--page-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.36) 0 0.16rem, transparent 0.16rem 2.2rem),
+		radial-gradient(circle at 18% 18%, rgba(255, 20, 147, 0.42), transparent 14rem),
+		radial-gradient(circle at 82% 14%, rgba(248, 192, 78, 0.34), transparent 15rem),
+		radial-gradient(circle at 50% 88%, rgba(255, 122, 200, 0.34), transparent 18rem), linear-gradient(180deg, #ffd1ec 0%, #fff0fa 48%, #ff9bd7 100%);
+	--page-text: #7a1752;
+	--muted-text: #b01772;
+	--accent: #ff1493;
+	--accent-strong: #f8c04e;
+	--panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 105, 180, 0.2)), rgba(255, 240, 250, 0.9);
+	--board-bg: #fff0fa;
+	--panel-border: rgba(255, 20, 147, 0.78);
+	--control-bg: rgba(255, 240, 250, 0.82);
+	--control-border: rgba(255, 20, 147, 0.5);
+	--button-bg: rgba(255, 20, 147, 0.14);
+	--button-border: rgba(122, 23, 82, 0.42);
+	--success-bg: rgba(255, 240, 250, 0.82);
+	--success-text: #7a1752;
+	--success-border: rgba(248, 192, 78, 0.82);
+	--theme-shadow: 0 0.9rem 2.5rem rgba(255, 20, 147, 0.22), 0 0 2.4rem rgba(255, 255, 255, 0.64);
+}

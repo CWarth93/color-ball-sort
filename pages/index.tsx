@@ -1,10 +1,12 @@
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
 
 import { useThemeSelection } from '../hooks/useThemeSelection';
+import { boardCssVariables } from '../lib/boardGeometry';
 import { ballsPerColor, jarCapacity } from '../lib/gameConfig';
 import type { StoredLevel } from '../lib/levelTypes';
 import { themes } from '../lib/themes';
@@ -283,6 +285,7 @@ export default function HomePage() {
 						data-level={level}
 						data-ready={boardReady ? 'true' : 'false'}
 						data-move-blocked={isMoveLimitBlocking ? 'true' : 'false'}
+						style={boardCssVariables}
 						aria-label="Color Ball Sort board"
 						onPointerUp={(event) => {
 							if (event.target === event.currentTarget) {
@@ -308,6 +311,7 @@ export default function HomePage() {
 										data-empty={jar.length === 0 ? 'true' : 'false'}
 										data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
 										data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
+										style={{ '--jar-index': jarIndex } as CSSProperties}
 										key={`jar-${jarIndex}`}
 										aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
 										onPointerEnter={() => setHoverJar(jarIndex)}
