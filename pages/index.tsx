@@ -7,24 +7,14 @@ import { useEffect, useState } from 'react';
 
 import { useThemeSelection } from '../hooks/useThemeSelection';
 import { boardCssVariables } from '../lib/boardGeometry';
-import { ballsPerColor, jarCapacity } from '../lib/gameConfig';
+import { jarCapacity } from '../lib/gameConfig';
+import { applyMove, canDropBall, cloneJars, isLevelSolved } from '../lib/gameRules';
 import type { StoredLevel } from '../lib/levelTypes';
 import { themes } from '../lib/themes';
 
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), {
 	ssr: false,
 });
-
-const cloneJars = (jars: string[][]) => jars.map((jar) => [...jar]);
-
-const isLevelSolved = (jars: string[][]) =>
-	jars.every((jar) => {
-		if (jar.length === 0) {
-			return true;
-		}
-
-		return jar.length === ballsPerColor && jar.every((color) => color === jar[0]);
-	});
 
 type DragState = {
 	sourceJar: number;
@@ -205,28 +195,19 @@ export default function HomePage() {
 	};
 
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
-		if (!boardReady || showLevelComplete || isMoveLimitBlocking || sourceJar === null || sourceJar === targetJar) {
+		if (!boardReady || showLevelComplete || isMoveLimitBlocking || sourceJar === null || !canDropBall(jars, sourceJar, targetJar)) {
 			setDragSourceJar(null);
 			setHoverJar(null);
 			setDragState(null);
 			return;
 		}
 
-		if (jars[targetJar].length >= jarCapacity) {
-			setDragSourceJar(null);
-			setHoverJar(null);
-			setDragState(null);
+		const nextJars = applyMove(jars, sourceJar, targetJar);
+
+		if (!nextJars) {
 			return;
 		}
 
-		const nextJars = cloneJars(jars);
-		const movingBall = nextJars[sourceJar].pop();
-
-		if (!movingBall) {
-			return;
-		}
-
-		nextJars[targetJar].push(movingBall);
 		const nextMovesUsed = movesUsed + 1;
 
 		setTurnHistory((currentHistory) => [...currentHistory, cloneJars(jars)]);
