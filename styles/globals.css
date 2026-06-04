@@ -168,6 +168,8 @@ select {
 .pageShell {
 	min-height: 100vh;
 	padding: 1.25rem;
+	background: var(--page-bg);
+	color: var(--page-text);
 }
 
 .siteHeader {
@@ -177,7 +179,11 @@ select {
 	gap: 1rem;
 	max-width: 720px;
 	margin: 0 auto;
-	padding: 0.75rem 0;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--control-border);
+	border-radius: 8px;
+	background: var(--control-bg);
+	box-shadow: var(--theme-shadow);
 }
 
 .brand,
@@ -207,13 +213,27 @@ h1 {
 .contentPage {
 	max-width: 720px;
 	margin: 4rem auto;
+	padding: 1.5rem;
+	border: 2px solid var(--panel-border);
+	border-radius: 8px;
+	background: var(--panel-bg);
 	color: var(--muted-text);
 	line-height: 1.7;
+	box-shadow: var(--theme-shadow);
 }
 
 .contentPage h1 {
 	color: var(--page-text);
 	font-size: 3rem;
+}
+
+.contentPage h2 {
+	color: var(--page-text);
+}
+
+.contentPage a {
+	color: var(--accent);
+	font-weight: 800;
 }
 
 .gameScreen {

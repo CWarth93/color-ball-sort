@@ -5,6 +5,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
 
 import type { StoredLevel } from '../lib/levelTypes';
+import { themeStorageKey } from '../lib/themeStorage';
 import { defaultTheme, themes } from '../lib/themes';
 
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
@@ -55,12 +56,21 @@ export default function HomePage() {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
-	const [activeTheme, setActiveTheme] = useState(defaultTheme);
+	const [activeTheme, setActiveTheme] = useState(() => {
+		if (typeof window === 'undefined') {
+			return defaultTheme;
+		}
+
+		const storedThemeId = window.localStorage.getItem(themeStorageKey);
+
+		return themes.find((theme) => theme.id === storedThemeId) ?? defaultTheme;
+	});
 	const isLoadingLevel = !boardReady && !showLevelComplete;
 	const isMoveLimitBlocking = boardReady && movesUsed >= moveBudget && !showLevelComplete;
 
 	useEffect(() => {
 		document.documentElement.dataset.theme = activeTheme.id;
+		window.localStorage.setItem(themeStorageKey, activeTheme.id);
 
 		return () => {
 			delete document.documentElement.dataset.theme;
