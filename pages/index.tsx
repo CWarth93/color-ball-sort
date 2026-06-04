@@ -62,51 +62,55 @@ const calculateMinimumTurns = (jars: string[][]) => {
 
 const createSolvedLevel = () => [...colors.map((color) => Array.from({ length: ballsPerColor }, () => color)), []];
 
-const createLevel = () => {
-	for (let attempt = 0; attempt < 100; attempt += 1) {
-		let nextJars = createSolvedLevel();
-		const seenStates = new Set([nextJars.map((jar) => jar.join(',')).join('|')]);
-		const targetTurns = 8 + Math.floor(Math.random() * 3);
+const createScrambledLevel = (turns: number) => {
+	let nextJars = createSolvedLevel();
+	let previousMove: [number, number] | null = null;
 
-		for (let turn = 0; turn < targetTurns; turn += 1) {
-			const candidates: string[][][] = [];
+	for (let turn = 0; turn < turns; turn += 1) {
+		const availableMoves: Array<[number, number]> = [];
 
-			for (let sourceJar = 0; sourceJar < jarCount; sourceJar += 1) {
-				if (nextJars[sourceJar].length === 0) {
+		for (let sourceJar = 0; sourceJar < jarCount; sourceJar += 1) {
+			if (nextJars[sourceJar].length === 0) {
+				continue;
+			}
+
+			for (let targetJar = 0; targetJar < jarCount; targetJar += 1) {
+				if (
+					sourceJar === targetJar ||
+					nextJars[targetJar].length >= jarCapacity ||
+					(previousMove !== null && previousMove[0] === targetJar && previousMove[1] === sourceJar)
+				) {
 					continue;
 				}
 
-				for (let targetJar = 0; targetJar < jarCount; targetJar += 1) {
-					if (sourceJar === targetJar || nextJars[targetJar].length >= jarCapacity) {
-						continue;
-					}
-
-					const candidateJars = cloneJars(nextJars);
-					const movingBall = candidateJars[sourceJar].pop();
-
-					if (!movingBall) {
-						continue;
-					}
-
-					candidateJars[targetJar].push(movingBall);
-
-					const stateKey = candidateJars.map((jar) => jar.join(',')).join('|');
-					if (!seenStates.has(stateKey) && calculateMinimumTurns(candidateJars) === turn + 1) {
-						candidates.push(candidateJars);
-					}
-				}
+				availableMoves.push([sourceJar, targetJar]);
 			}
-
-			if (candidates.length === 0) {
-				break;
-			}
-
-			nextJars = shuffle(candidates)[0];
-			seenStates.add(nextJars.map((jar) => jar.join(',')).join('|'));
 		}
 
+		const [sourceJar, targetJar] = shuffle(availableMoves)[0];
+		const movingBall = nextJars[sourceJar].pop();
+
+		if (!movingBall) {
+			continue;
+		}
+
+		nextJars = cloneJars(nextJars);
+		nextJars[targetJar].push(movingBall);
+		previousMove = [sourceJar, targetJar];
+	}
+
+	return nextJars;
+};
+
+const createLevel = () => {
+	const targetMinimumTurns = 6 + Math.floor(Math.random() * 5);
+
+	for (let attempt = 0; attempt < 200; attempt += 1) {
+		const scrambleTurns = 18 + targetMinimumTurns * 3 + Math.floor(Math.random() * 12);
+		const nextJars = createScrambledLevel(scrambleTurns);
 		const minimumTurns = calculateMinimumTurns(nextJars);
-		if (minimumTurns === targetTurns && hasMixedJar(nextJars)) {
+
+		if (minimumTurns === targetMinimumTurns && hasMixedJar(nextJars)) {
 			return { jars: nextJars, minimumTurns };
 		}
 	}
