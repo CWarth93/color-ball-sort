@@ -56,6 +56,6 @@ npm install
 npm run dev
 ```
 
-Set `MONGODB_URI` in `.env` before running the app or seeding levels.
+Set `MONGODB_URI` in `.env` before running the app or seeding levels. The deployed app also accepts `MONGODB_CONNECTION_STRING`.
 
 Open [http://localhost:3000](http://localhost:3000).

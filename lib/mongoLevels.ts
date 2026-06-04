@@ -9,10 +9,10 @@ const collectionName = 'levels';
 let clientPromise: Promise<MongoClient> | null = null;
 
 const getMongoClient = () => {
-	const uri = process.env.MONGODB_URI;
+	const uri = process.env.MONGODB_URI ?? process.env.MONGODB_CONNECTION_STRING;
 
 	if (!uri) {
-		throw new Error('MONGODB_URI is not configured');
+		throw new Error('MongoDB connection string is not configured');
 	}
 
 	if (!clientPromise) {
