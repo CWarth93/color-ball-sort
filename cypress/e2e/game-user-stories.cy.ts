@@ -492,13 +492,40 @@ describe('Color Ball Sort endless game', () => {
 			const rect = $jar[0].getBoundingClientRect();
 
 			expect(rect.width).to.be.greaterThan(54);
-			expect(rect.height).to.be.greaterThan(200);
+			expect(rect.height).to.be.greaterThan(260);
 		});
 		cy.get(selectors.jar(0)).should('have.css', '-webkit-tap-highlight-color', 'rgba(0, 0, 0, 0)').and('have.css', 'user-select', 'none');
 		cy.get(selectors.ball).first().should('have.css', '-webkit-tap-highlight-color', 'rgba(0, 0, 0, 0)').and('have.css', 'user-select', 'none');
 
 		findAvailableMove().then(({ sourceJar, targetJar }) => {
-			dragTopBallToJar(sourceJar, targetJar);
+			cy.get(selectors.jar(sourceJar)).then(($jar) => {
+				const rect = $jar[0].getBoundingClientRect();
+
+				cy.wrap($jar).trigger('pointerdown', {
+					pointerId: 1,
+					pointerType: 'touch',
+					button: 0,
+					buttons: 1,
+					clientX: rect.left + rect.width / 2,
+					clientY: rect.top + rect.height / 2,
+				});
+			});
+			cy.get(selectors.jar(targetJar)).then(($jar) => {
+				const rect = $jar[0].getBoundingClientRect();
+				const clientX = rect.left + rect.width / 2;
+				const clientY = rect.top + rect.height / 2;
+
+				cy.wrap($jar).trigger('pointermove', { pointerId: 1, pointerType: 'touch', button: 0, buttons: 1, clientX, clientY });
+				cy.get('.dragGhost')
+					.should('exist')
+					.and(($ghost) => {
+						const ghostRect = $ghost[0].getBoundingClientRect();
+
+						expect(ghostRect.left + ghostRect.width / 2).to.be.closeTo(clientX, 2);
+						expect(ghostRect.top + ghostRect.height / 2).to.be.closeTo(clientY, 2);
+					});
+				cy.wrap($jar).trigger('pointerup', { pointerId: 1, pointerType: 'touch', button: 0, buttons: 0, clientX, clientY });
+			});
 		});
 	});
 

@@ -160,6 +160,16 @@ export default function HomePage() {
 		});
 	};
 
+	const startJarDrag = (event: ReactPointerEvent, jarIndex: number) => {
+		const topBallIndex = jars[jarIndex].length - 1;
+
+		if (topBallIndex < 0) {
+			return;
+		}
+
+		startBallDrag(event, jarIndex, topBallIndex);
+	};
+
 	const moveDragOverJar = (jarIndex: number) => {
 		if (!dragState) {
 			return;
@@ -335,6 +345,7 @@ export default function HomePage() {
 										data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
 										key={`jar-${jarIndex}`}
 										aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
+										onPointerDown={(event) => startJarDrag(event, jarIndex)}
 										onPointerEnter={() => setHoverJar(jarIndex)}
 										onPointerMove={() => moveDragOverJar(jarIndex)}
 										onPointerLeave={() => setHoverJar((currentHoverJar) => (currentHoverJar === jarIndex ? null : currentHoverJar))}
@@ -350,7 +361,6 @@ export default function HomePage() {
 												onDragStart={(event) => {
 													event.preventDefault();
 												}}
-												onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
 												style={{
 													backgroundColor: color,
 													gridRow: jarCapacity - ballIndex,
