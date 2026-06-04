@@ -402,14 +402,24 @@ h1 {
 }
 
 .gameBoard {
+	--board-padding: 1.25rem;
 	position: relative;
 	width: 100%;
 	min-height: 0;
-	padding: 1.25rem;
+	padding: var(--board-padding);
 	border: 2px solid var(--panel-border);
 	border-radius: 8px;
 	background: var(--panel-bg);
 	box-shadow: inset 0 0 2rem rgba(255, 79, 216, 0.16), var(--theme-shadow);
+}
+
+.gameBoard[data-ready='false']::before {
+	display: block;
+	width: 100%;
+	aspect-ratio: 920 / 448;
+	border-radius: 8px;
+	background: var(--board-bg);
+	content: '';
 }
 
 .gameBoard[data-move-blocked='true'] {
@@ -432,7 +442,7 @@ h1 {
 
 .levelLoading {
 	position: absolute;
-	inset: 1.25rem;
+	inset: var(--board-padding);
 	z-index: 20;
 	display: grid;
 	align-content: center;
@@ -667,7 +677,7 @@ h1 {
 	}
 
 	.gameBoard {
-		padding: 0.65rem;
+		--board-padding: 0.65rem;
 	}
 
 	.gameJar {
