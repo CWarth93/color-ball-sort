@@ -249,7 +249,7 @@ export default function HomePage() {
 							</p>
 						)}
 						<section className="gameBoard" data-testid="game-board" data-level={level} aria-label="Color Ball Sort board">
-							<PhaserBoard jars={jars} activeJar={dragSourceJar} motionEnabled={motionEnabled} />
+							<PhaserBoard jars={jars} activeJar={dragSourceJar} onBallDrop={dropBall} motionEnabled={motionEnabled} />
 							{jars.map((jar, jarIndex) => (
 								<button
 									className="gameJar"
