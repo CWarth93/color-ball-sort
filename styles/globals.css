@@ -304,8 +304,8 @@ h1 {
 	align-items: center;
 	justify-items: center;
 	width: calc((100% - 2.5rem - 5rem) / 6);
-	height: 14.5rem;
-	padding: 0.65rem 0.6rem 1.65rem;
+	height: 23rem;
+	padding: 0.95rem 0.6rem 1.85rem;
 	border: 0;
 	border-top: 0;
 	border-radius: 0 0 1.35rem 1.35rem;
@@ -351,7 +351,7 @@ h1 {
 
 .gameBall {
 	display: block;
-	width: min(76%, 3.75rem);
+	width: min(82%, 5.35rem);
 	aspect-ratio: 1;
 	border-radius: 999px;
 	box-shadow: none;
@@ -373,7 +373,7 @@ h1 {
 	position: fixed;
 	z-index: 100;
 	display: block;
-	width: 4rem;
+	width: 5.25rem;
 	aspect-ratio: 1;
 	border: 2px solid rgba(255, 255, 255, 0.55);
 	border-radius: 999px;
@@ -422,8 +422,8 @@ h1 {
 	.gameJar {
 		bottom: 0.65rem;
 		width: calc((100% - 1.3rem - 2.5rem) / 6);
-		height: 7.1rem;
-		padding: 0.35rem 0.25rem 0.75rem;
+		height: 11.4rem;
+		padding: 0.5rem 0.25rem 0.9rem;
 		border-radius: 0 0 0.8rem 0.8rem;
 	}
 

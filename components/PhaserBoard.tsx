@@ -20,14 +20,14 @@ type SceneInstance = import('phaser').Scene & {
 const boardWidth = 920;
 const boardHeight = 448;
 const jarCapacity = 3;
-const jarWidth = 112;
-const jarHeight = 232;
-const jarTopInset = 20;
-const jarBottomInset = 16;
+const jarWidth = 132;
+const jarHeight = 368;
+const jarTopInset = 18;
+const jarBottomInset = 18;
 const jarInnerPadding = 10;
 const jarInnerHeight = jarHeight - jarTopInset - jarBottomInset;
 const slotHeight = jarInnerHeight / jarCapacity;
-const ballRadius = Math.min(30, slotHeight / 2 - jarInnerPadding);
+const ballRadius = Math.min(43, slotHeight / 2 - jarInnerPadding);
 
 export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: PhaserBoardProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
@@ -70,7 +70,7 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 					this.cameras.main.setBackgroundColor('#11191d');
 
 					const gap = (boardWidth - jarWidth * this.jarsState.length) / (this.jarsState.length + 1);
-					const baseY = boardHeight - 48;
+					const baseY = boardHeight - 32;
 					const jarTop = -jarHeight / 2 + jarTopInset;
 					const jarBottom = jarHeight / 2 - jarBottomInset;
 					const drawJarGlass = (jarIndex: number) => {
@@ -150,7 +150,7 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 						jarContainer.add(jarShape);
 						drawJarGlass(jarIndex);
 
-						const hitArea = this.add.rectangle(0, jarHeight / 2 - 10, jarWidth + 22, jarHeight + 10, 0xffffff, 0);
+						const hitArea = this.add.rectangle(0, 0, jarWidth + 18, jarHeight + 8, 0xffffff, 0);
 						hitArea.setInteractive({ useHandCursor: true });
 						hitArea.on('pointerover', () => setJarHover(jarIndex));
 						hitArea.on('pointerout', () => setJarHover(null));
