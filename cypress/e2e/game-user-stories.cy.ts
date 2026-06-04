@@ -43,7 +43,7 @@ const findAvailableMove = () =>
 	cy.get('[data-testid^="jar-"]').then((jars) => {
 		const jarElements = [...jars];
 		const sourceJar = jarElements.findIndex((jar) => jar.querySelectorAll('[data-testid="ball"]').length > 0);
-		const targetJar = jarElements.findIndex((jar, jarIndex) => jarIndex !== sourceJar && jar.querySelectorAll('[data-testid="ball"]').length < 4);
+		const targetJar = jarElements.findIndex((jar, jarIndex) => jarIndex !== sourceJar && jar.querySelectorAll('[data-testid="ball"]').length < 3);
 
 		expect(sourceJar).to.be.greaterThan(-1);
 		expect(targetJar).to.be.greaterThan(-1);
@@ -114,7 +114,7 @@ describe('Color Ball Sort user stories', () => {
 		cy.get('[data-testid^="jar-"]').should('have.length', 6);
 		cy.get('[data-testid^="jar-"][data-empty="true"]').should('have.length', 1);
 		cy.get('[data-testid^="jar-"]').each((jar) => {
-			expect(jar.find('[data-testid="ball"]').length).to.be.at.most(4);
+			expect(jar.find('[data-testid="ball"]').length).to.be.at.most(3);
 		});
 		cy.get(selectors.ball).then((balls) => {
 			const colors = new Set([...balls].map((ball) => ball.getAttribute('data-color')));

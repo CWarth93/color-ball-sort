@@ -21,7 +21,7 @@ type SceneInstance = import('phaser').Scene & {
 
 const boardWidth = 920;
 const boardHeight = 448;
-const jarCapacity = 4;
+const jarCapacity = 3;
 
 export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, motionEnabled }: PhaserBoardProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);

@@ -9,7 +9,7 @@ import { PageShell } from '../components/PageShell';
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
 
 const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
-const jarCapacity = 4;
+const jarCapacity = 3;
 const ballsPerColor = 3;
 const jarCount = 6;
 const sprintSeconds = 120;
