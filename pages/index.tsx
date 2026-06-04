@@ -8,7 +8,9 @@ import type { StoredLevel } from '../lib/levelTypes';
 import { themeStorageKey } from '../lib/themeStorage';
 import { defaultTheme, themes } from '../lib/themes';
 
-const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
+const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), {
+	ssr: false,
+});
 
 const jarCapacity = 3;
 const ballsPerColor = 3;
@@ -76,6 +78,12 @@ export default function HomePage() {
 			delete document.documentElement.dataset.theme;
 		};
 	}, [activeTheme]);
+
+	const selectTheme = (theme: typeof themes[number]) => {
+		document.documentElement.dataset.theme = theme.id;
+		window.localStorage.setItem(themeStorageKey, theme.id);
+		setActiveTheme(theme);
+	};
 
 	const loadNextLevel = async () => {
 		setBoardReady(false);
@@ -343,7 +351,10 @@ export default function HomePage() {
 													event.preventDefault();
 												}}
 												onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
-												style={{ backgroundColor: color, gridRow: jarCapacity - ballIndex }}
+												style={{
+													backgroundColor: color,
+													gridRow: jarCapacity - ballIndex,
+												}}
 												key={`${color}-${jarIndex}-${ballIndex}`}
 											/>
 										))}
@@ -366,7 +377,15 @@ export default function HomePage() {
 							</div>
 						)}
 						{dragState && (
-							<span className="dragGhost" style={{ backgroundColor: dragState.fill, left: dragState.x, top: dragState.y }} aria-hidden="true">
+							<span
+								className="dragGhost"
+								style={{
+									backgroundColor: dragState.fill,
+									left: dragState.x,
+									top: dragState.y,
+								}}
+								aria-hidden="true"
+							>
 								{dragState.icon && <img src={dragState.icon} alt="" />}
 							</span>
 						)}
@@ -383,7 +402,7 @@ export default function HomePage() {
 								aria-label={`${theme.label} theme`}
 								aria-pressed={activeTheme.id === theme.id}
 								key={theme.id}
-								onClick={() => setActiveTheme(theme)}
+								onClick={() => selectTheme(theme)}
 							>
 								<img src={theme.swatch} alt="" />
 							</button>
