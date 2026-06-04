@@ -1,22 +1,11 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useEffect } from 'react';
 
 import { PageShell } from '../components/PageShell';
-import { themeStorageKey } from '../lib/themeStorage';
-import { defaultTheme, themes } from '../lib/themes';
+import { useThemeSelection } from '../hooks/useThemeSelection';
 
 export default function ImprintPage() {
-	useEffect(() => {
-		const storedThemeId = window.localStorage.getItem(themeStorageKey);
-		const theme = themes.find((availableTheme) => availableTheme.id === storedThemeId) ?? defaultTheme;
-
-		document.documentElement.dataset.theme = theme.id;
-
-		return () => {
-			delete document.documentElement.dataset.theme;
-		};
-	}, []);
+	useThemeSelection();
 
 	return (
 		<>
