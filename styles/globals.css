@@ -1,8 +1,49 @@
 :root {
 	color-scheme: dark;
-	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-	background: #101417;
-	color: #f6f2ea;
+	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Impact, 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
+	--page-bg: radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.32), transparent 18rem),
+		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.28), transparent 17rem), linear-gradient(180deg, #240a42 0%, #13091f 48%, #070414 100%);
+	--page-text: #fff7ff;
+	--muted-text: #ffd1f7;
+	--accent: #35f3ff;
+	--accent-strong: #ffe66d;
+	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.12), rgba(53, 243, 255, 0.08)), rgba(19, 9, 31, 0.88);
+	--board-bg: #13091f;
+	--panel-border: rgba(255, 209, 247, 0.46);
+	--control-bg: rgba(19, 9, 31, 0.78);
+	--control-border: rgba(53, 243, 255, 0.42);
+	--button-bg: rgba(255, 79, 216, 0.16);
+	--button-border: rgba(255, 209, 247, 0.48);
+	--success-bg: rgba(19, 9, 31, 0.78);
+	--success-text: #fff7ff;
+	--success-border: rgba(53, 243, 255, 0.72);
+	--theme-shadow: 0 0.9rem 2.4rem rgba(255, 79, 216, 0.18), 0 0 2.2rem rgba(53, 243, 255, 0.14);
+	font-family: var(--font-main);
+	background: var(--page-bg);
+	color: var(--page-text);
+}
+
+html[data-theme='vaporwave'] {
+	--font-main: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+	--font-display: Impact, 'Arial Black', 'Trebuchet MS', ui-sans-serif, sans-serif;
+	--page-bg: radial-gradient(circle at 20% 18%, rgba(255, 79, 216, 0.32), transparent 18rem),
+		radial-gradient(circle at 82% 12%, rgba(53, 243, 255, 0.28), transparent 17rem), linear-gradient(180deg, #240a42 0%, #13091f 48%, #070414 100%);
+	--page-text: #fff7ff;
+	--muted-text: #ffd1f7;
+	--accent: #35f3ff;
+	--accent-strong: #ffe66d;
+	--panel-bg: linear-gradient(180deg, rgba(255, 79, 216, 0.12), rgba(53, 243, 255, 0.08)), rgba(19, 9, 31, 0.88);
+	--board-bg: #13091f;
+	--panel-border: rgba(255, 209, 247, 0.46);
+	--control-bg: rgba(19, 9, 31, 0.78);
+	--control-border: rgba(53, 243, 255, 0.42);
+	--button-bg: rgba(255, 79, 216, 0.16);
+	--button-border: rgba(255, 209, 247, 0.48);
+	--success-bg: rgba(19, 9, 31, 0.78);
+	--success-text: #fff7ff;
+	--success-border: rgba(53, 243, 255, 0.72);
+	--theme-shadow: 0 0.9rem 2.4rem rgba(255, 79, 216, 0.18), 0 0 2.2rem rgba(53, 243, 255, 0.14);
 }
 
 * {
@@ -12,7 +53,7 @@
 body {
 	margin: 0;
 	min-width: 320px;
-	background: linear-gradient(180deg, rgba(73, 198, 229, 0.12), transparent 32rem), #101417;
+	background: var(--page-bg);
 }
 
 a {
@@ -52,7 +93,7 @@ select {
 
 .eyebrow {
 	margin: 0 0 0.75rem;
-	color: #49c6e5;
+	color: var(--accent);
 	font-size: 0.875rem;
 	font-weight: 800;
 	text-transform: uppercase;
@@ -68,12 +109,12 @@ h1 {
 .contentPage {
 	max-width: 720px;
 	margin: 4rem auto;
-	color: #d5d0c7;
+	color: var(--muted-text);
 	line-height: 1.7;
 }
 
 .contentPage h1 {
-	color: #f6f2ea;
+	color: var(--page-text);
 	font-size: 3rem;
 }
 
@@ -90,8 +131,11 @@ h1 {
 	top: 1.25rem;
 	left: 50%;
 	z-index: 40;
+	color: var(--page-text);
+	font-family: var(--font-display);
 	font-size: clamp(2.5rem, 5vw, 4.5rem);
 	line-height: 0.95;
+	text-shadow: 0 0 1.2rem rgba(255, 79, 216, 0.28), 0 0 2rem rgba(53, 243, 255, 0.18);
 	text-align: center;
 	transform: translateX(-50%);
 }
@@ -114,34 +158,34 @@ h1 {
 	align-items: center;
 	gap: 0.2rem;
 	padding: 0.65rem 0.75rem;
-	border: 1px solid rgba(246, 242, 234, 0.16);
+	border: 1px solid var(--control-border);
 	border-radius: 8px;
-	background: rgba(16, 20, 23, 0.72);
-	color: #d5d0c7;
+	background: var(--control-bg);
+	color: var(--muted-text);
 	font-size: 0.95rem;
 	backdrop-filter: blur(6px);
 }
 
 .moveHud strong {
-	color: #f6f2ea;
+	color: var(--page-text);
 }
 
 .moveHud[data-blocked='true'] {
-	border-color: rgba(255, 209, 102, 0.75);
-	background: rgba(255, 209, 102, 0.18);
-	color: #ffe8a8;
+	border-color: color-mix(in srgb, var(--accent-strong) 75%, transparent);
+	background: color-mix(in srgb, var(--accent-strong) 18%, transparent);
+	color: var(--accent-strong);
 }
 
 .moveHud[data-blocked='true'] strong {
-	color: #ffd166;
+	color: var(--accent-strong);
 }
 
 .undoButton {
-	border: 1px solid rgba(246, 242, 234, 0.22);
+	border: 1px solid var(--button-border);
 	border-radius: 8px;
 	padding: 0.35rem 0.6rem;
-	background: rgba(255, 255, 255, 0.07);
-	color: #f6f2ea;
+	background: var(--button-bg);
+	color: var(--page-text);
 	font-weight: 800;
 	cursor: pointer;
 }
@@ -152,10 +196,10 @@ h1 {
 }
 
 .undoButton[data-highlighted='true'] {
-	border-color: rgba(255, 209, 102, 0.85);
-	background: rgba(255, 209, 102, 0.18);
-	color: #ffe8a8;
-	box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.42);
+	border-color: color-mix(in srgb, var(--accent-strong) 85%, transparent);
+	background: color-mix(in srgb, var(--accent-strong) 18%, transparent);
+	color: var(--accent-strong);
+	box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-strong) 42%, transparent);
 	animation: undoPulse 900ms ease-in-out infinite;
 }
 
@@ -167,7 +211,7 @@ h1 {
 	place-items: center;
 	overflow: hidden;
 	border-radius: 8px;
-	background: rgba(17, 25, 29, 0.68);
+	background: var(--success-bg);
 	backdrop-filter: blur(4px);
 	pointer-events: none;
 }
@@ -175,13 +219,13 @@ h1 {
 .levelSuccess strong {
 	position: relative;
 	z-index: 2;
-	border: 1px solid rgba(101, 212, 110, 0.5);
+	border: 1px solid var(--success-border);
 	border-radius: 8px;
 	padding: 0.95rem 1.2rem;
-	background: rgba(16, 20, 23, 0.82);
-	color: #d9ffdd;
+	background: var(--control-bg);
+	color: var(--success-text);
 	font-size: clamp(1.3rem, 5vw, 2.4rem);
-	box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.3);
+	box-shadow: var(--theme-shadow);
 	animation: successPop 900ms ease-out both;
 }
 
@@ -258,9 +302,10 @@ h1 {
 	min-height: 0;
 	aspect-ratio: 920 / 448;
 	padding: 1.25rem;
-	border: 1px solid rgba(246, 242, 234, 0.14);
+	border: 1px solid var(--panel-border);
 	border-radius: 8px;
-	background: rgba(255, 255, 255, 0.04);
+	background: var(--panel-bg);
+	box-shadow: var(--theme-shadow);
 }
 
 .gameBoard[data-move-blocked='true'] {
@@ -290,16 +335,16 @@ h1 {
 	place-items: center;
 	gap: 0.9rem;
 	border-radius: 8px;
-	background: #11191d;
-	color: #f6f2ea;
+	background: var(--board-bg);
+	color: var(--page-text);
 	pointer-events: none;
 }
 
 .levelLoading span {
 	width: 3.5rem;
 	aspect-ratio: 1;
-	border: 0.28rem solid rgba(246, 242, 234, 0.18);
-	border-top-color: #49c6e5;
+	border: 0.28rem solid color-mix(in srgb, var(--page-text) 18%, transparent);
+	border-top-color: var(--accent);
 	border-radius: 999px;
 	animation: loadingSpin 900ms linear infinite;
 }
@@ -314,13 +359,13 @@ h1 {
 	right: 1rem;
 	bottom: 0.85rem;
 	z-index: 40;
-	color: rgba(246, 242, 234, 0.72);
+	color: color-mix(in srgb, var(--page-text) 72%, transparent);
 	font-size: 0.82rem;
 	text-decoration: none;
 }
 
 .imprintLink:hover {
-	color: #f6f2ea;
+	color: var(--page-text);
 }
 
 .phaserBoard {
@@ -422,6 +467,62 @@ h1 {
 	opacity: 0.96;
 	pointer-events: none;
 	transform: translate(-50%, -50%);
+}
+
+.dragGhost img {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 56%;
+	height: 56%;
+	object-fit: contain;
+	opacity: 0.86;
+	transform: translate(-50%, -50%);
+}
+
+.themePicker {
+	position: fixed;
+	left: 1rem;
+	bottom: 0.85rem;
+	z-index: 40;
+	display: grid;
+	gap: 0.45rem;
+	color: var(--page-text);
+	font-family: var(--font-main);
+}
+
+.themePicker strong {
+	font-size: 0.82rem;
+	text-transform: uppercase;
+	text-shadow: 0 0 0.8rem rgba(255, 79, 216, 0.5);
+}
+
+.themeOptions {
+	display: flex;
+	gap: 0.45rem;
+}
+
+.themeOption {
+	display: grid;
+	place-items: center;
+	width: 2.5rem;
+	aspect-ratio: 1;
+	border: 1px solid var(--button-border);
+	border-radius: 8px;
+	background: var(--button-bg);
+	cursor: pointer;
+	box-shadow: var(--theme-shadow);
+}
+
+.themeOption[aria-pressed='true'] {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 0.16rem color-mix(in srgb, var(--accent) 28%, transparent), var(--theme-shadow);
+}
+
+.themeOption img {
+	width: 1.8rem;
+	height: 1.8rem;
+	object-fit: contain;
 }
 
 @media (max-width: 760px) {

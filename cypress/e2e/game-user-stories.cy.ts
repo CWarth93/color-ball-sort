@@ -8,6 +8,7 @@ const selectors = {
 	movesLoading: '[data-testid="moves-loading"]',
 	undoTurn: '[data-testid="undo-turn"]',
 	levelLoading: '[data-testid="level-loading"]',
+	vaporwaveTheme: '[data-testid="theme-vaporwave"]',
 };
 
 const startGame = () => {
@@ -162,6 +163,14 @@ describe('Color Ball Sort endless game', () => {
 		cy.get(selectors.gameBoard).find('canvas').should('be.visible');
 	});
 
+	it('uses the vaporwave theme by default', () => {
+		startGame();
+
+		cy.contains('Pick your theme').should('be.visible');
+		cy.get(selectors.vaporwaveTheme).should('be.visible').and('have.attr', 'aria-pressed', 'true');
+		cy.get(selectors.vaporwaveTheme).find('img').should('have.attr', 'src').and('include', '/themes/vaporwave/theme-icon.png');
+	});
+
 	it('generates a randomized level with five colors, six jars, and three free slots', () => {
 		startGame();
 
@@ -310,6 +319,7 @@ describe('Color Ball Sort endless game', () => {
 						expect(ghostRect.left + ghostRect.width / 2).to.be.closeTo(clientX, 2);
 						expect(ghostRect.top + ghostRect.height / 2).to.be.closeTo(clientY, 2);
 					});
+				cy.get('.dragGhost').find('img').should('have.attr', 'src').and('include', '/themes/vaporwave/');
 				cy.wrap($jar).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX, clientY });
 			});
 		});

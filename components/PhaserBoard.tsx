@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react';
 
+import type { GameTheme } from '../lib/themes';
+
 type PhaserBoardProps = {
 	jars: string[][];
 	activeJar: number | null;
 	hoverJar: number | null;
 	onBallDrop: (sourceJar: number, targetJar: number) => void;
+	theme: GameTheme;
 };
 
 type PhaserNamespace = typeof import('phaser');
@@ -15,6 +18,7 @@ type SceneInstance = import('phaser').Scene & {
 	activeJarState?: number | null;
 	hoverJarState?: number | null;
 	onBallDropState?: (sourceJar: number, targetJar: number) => void;
+	themeState?: GameTheme;
 };
 
 const boardWidth = 920;
@@ -29,7 +33,11 @@ const jarInnerHeight = jarHeight - jarTopInset - jarBottomInset;
 const slotHeight = jarInnerHeight / jarCapacity;
 const ballRadius = Math.min(43, slotHeight / 2 - jarInnerPadding);
 
-export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: PhaserBoardProps) {
+const getIconKey = (themeId: string, color: string) => `${themeId}-${color.replace(/[^a-z0-9]/gi, '')}`;
+
+const hexToNumber = (color: string) => Number.parseInt(color.replace('#', ''), 16);
+
+export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, theme }: PhaserBoardProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const gameRef = useRef<GameInstance | null>(null);
 	const sceneRef = useRef<SceneInstance | null>(null);
@@ -53,9 +61,16 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 				activeJarState = activeJar;
 				hoverJarState = hoverJar;
 				onBallDropState = onBallDrop;
+				themeState = theme;
 				dragSourceJarState: number | null = null;
 				jarContainers = new Map<number, Phaser.GameObjects.Container>();
 				jarShapes = new Map<number, Phaser.GameObjects.Graphics>();
+
+				preload() {
+					Object.entries(this.themeState.ballStyles).forEach(([color, ballStyle]) => {
+						this.load.image(getIconKey(this.themeState.id, color), ballStyle.icon);
+					});
+				}
 
 				create() {
 					sceneRef.current = this;
@@ -67,7 +82,7 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 					this.tweens.killAll();
 					this.jarContainers.clear();
 					this.jarShapes.clear();
-					this.cameras.main.setBackgroundColor('#11191d');
+					this.cameras.main.setBackgroundColor(this.themeState.boardBackground);
 
 					const gap = (boardWidth - jarWidth * this.jarsState.length) / (this.jarsState.length + 1);
 					const baseY = boardHeight - 32;
@@ -82,8 +97,16 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 
 						const isSelected = this.activeJarState === jarIndex || this.dragSourceJarState === jarIndex;
 						const isHovered = this.hoverJarState === jarIndex;
-						const borderColor = isSelected ? 0xff5a6f : isHovered ? 0x49c6e5 : 0xd8d2c8;
-						const glassFill = isSelected ? 0x40252c : isHovered ? 0x1d3540 : 0x1a2429;
+						const borderColor = isSelected
+							? hexToNumber(this.themeState.jarBorderSelected)
+							: isHovered
+							? hexToNumber(this.themeState.jarBorderHovered)
+							: hexToNumber(this.themeState.jarBorder);
+						const glassFill = isSelected
+							? hexToNumber(this.themeState.jarFillSelected)
+							: isHovered
+							? hexToNumber(this.themeState.jarFillHovered)
+							: hexToNumber(this.themeState.jarFill);
 
 						jarShape.clear();
 						jarShape.lineStyle(isSelected ? 5 : isHovered ? 4 : 3, borderColor, isSelected ? 0.95 : 0.72);
@@ -168,10 +191,18 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 								return;
 							}
 
-							const ball = this.add.circle(ballX, ballY, ballRadius, Phaser.Display.Color.HexStringToColor(color).color);
+							const ballStyle = this.themeState.ballStyles[color];
+							const ballFill = ballStyle?.fill ?? color;
+							const ball = this.add.circle(ballX, ballY, ballRadius, Phaser.Display.Color.HexStringToColor(ballFill).color);
 
 							ball.setStrokeStyle(2, 0xffffff, 0.2);
 							this.add.circle(ballX - 10, ballY - 12, 8, 0xffffff, 0.28);
+							if (ballStyle) {
+								this.add
+									.image(ballX, ballY, getIconKey(this.themeState.id, color))
+									.setDisplaySize(ballRadius * 1.08, ballRadius * 1.08)
+									.setAlpha(0.86);
+							}
 
 							if (isTopBall) {
 								ball.setInteractive({ useHandCursor: true });
@@ -262,8 +293,9 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop }: P
 		scene.activeJarState = activeJar;
 		scene.hoverJarState = hoverJar;
 		scene.onBallDropState = onBallDrop;
+		scene.themeState = theme;
 		scene.renderBoard?.();
-	}, [jars, activeJar, hoverJar, onBallDrop]);
+	}, [jars, activeJar, hoverJar, onBallDrop, theme]);
 
 	return <div className="phaserBoard" ref={containerRef} aria-hidden="true" />;
 }

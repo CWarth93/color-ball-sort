@@ -5,6 +5,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEffect, useState } from 'react';
 
 import type { StoredLevel } from '../lib/levelTypes';
+import { defaultTheme, themes } from '../lib/themes';
 
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
 
@@ -24,7 +25,8 @@ const isLevelSolved = (jars: string[][]) =>
 
 type DragState = {
 	sourceJar: number;
-	color: string;
+	fill: string;
+	icon: string;
 	x: number;
 	y: number;
 };
@@ -52,8 +54,17 @@ export default function HomePage() {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
+	const [activeTheme, setActiveTheme] = useState(defaultTheme);
 	const isLoadingLevel = !boardReady && !showLevelComplete;
 	const isMoveLimitBlocking = boardReady && movesUsed >= moveBudget && !showLevelComplete;
+
+	useEffect(() => {
+		document.documentElement.dataset.theme = activeTheme.id;
+
+		return () => {
+			delete document.documentElement.dataset.theme;
+		};
+	}, [activeTheme]);
 
 	const loadNextLevel = async () => {
 		setBoardReady(false);
@@ -113,11 +124,13 @@ export default function HomePage() {
 		}
 
 		event.preventDefault();
+		const ballStyle = activeTheme.ballStyles[jars[jarIndex][ballIndex]];
 		setDragSourceJar(jarIndex);
 		setHoverJar(jarIndex);
 		setDragState({
 			sourceJar: jarIndex,
-			color: jars[jarIndex][ballIndex],
+			fill: ballStyle?.fill ?? jars[jarIndex][ballIndex],
+			icon: ballStyle?.icon ?? '',
 			x: event.clientX,
 			y: event.clientY,
 		});
@@ -211,7 +224,7 @@ export default function HomePage() {
 				<title>Color Ball Sort</title>
 				<meta name="description" content="An endless color ball sorting puzzle built with Next.js, TypeScript, React, and Phaser." />
 			</Head>
-			<main className="gameScreen">
+			<main className="gameScreen" data-theme={activeTheme.id}>
 				<h1 className="gameTitle">Color Ball Sort</h1>
 				<div className="gameStage">
 					<div className="gameControls">
@@ -250,7 +263,13 @@ export default function HomePage() {
 					>
 						{boardReady && (
 							<>
-								<PhaserBoard jars={jars} activeJar={dragSourceJar} hoverJar={hoverJar} onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)} />
+								<PhaserBoard
+									jars={jars}
+									activeJar={dragSourceJar}
+									hoverJar={hoverJar}
+									onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)}
+									theme={activeTheme}
+								/>
 								{jars.map((jar, jarIndex) => (
 									<button
 										className="gameJar"
@@ -300,8 +319,30 @@ export default function HomePage() {
 								<strong>Level complete</strong>
 							</div>
 						)}
-						{dragState && <span className="dragGhost" style={{ backgroundColor: dragState.color, left: dragState.x, top: dragState.y }} aria-hidden="true" />}
+						{dragState && (
+							<span className="dragGhost" style={{ backgroundColor: dragState.fill, left: dragState.x, top: dragState.y }} aria-hidden="true">
+								{dragState.icon && <img src={dragState.icon} alt="" />}
+							</span>
+						)}
 					</section>
+				</div>
+				<div className="themePicker" aria-label="Theme picker">
+					<strong>Pick your theme</strong>
+					<div className="themeOptions">
+						{themes.map((theme) => (
+							<button
+								className="themeOption"
+								type="button"
+								data-testid={`theme-${theme.id}`}
+								aria-label={`${theme.label} theme`}
+								aria-pressed={activeTheme.id === theme.id}
+								key={theme.id}
+								onClick={() => setActiveTheme(theme)}
+							>
+								<img src={theme.swatch} alt="" />
+							</button>
+						))}
+					</div>
 				</div>
 				<Link href="/imprint" className="imprintLink">
 					Imprint
