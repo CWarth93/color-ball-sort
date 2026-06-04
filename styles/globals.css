@@ -240,10 +240,23 @@ h1 {
 	}
 }
 
+@keyframes loadingSpin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes loadingPulse {
+	50% {
+		opacity: 0.54;
+	}
+}
+
 .gameBoard {
 	position: relative;
 	width: 100%;
 	min-height: 0;
+	aspect-ratio: 920 / 448;
 	padding: 1.25rem;
 	border: 1px solid rgba(246, 242, 234, 0.14);
 	border-radius: 8px;
@@ -266,6 +279,33 @@ h1 {
 	background: repeating-linear-gradient(135deg, rgba(255, 209, 102, 0.12) 0, rgba(255, 209, 102, 0.12) 0.35rem, transparent 0.35rem, transparent 0.7rem);
 	content: '';
 	pointer-events: none;
+}
+
+.levelLoading {
+	position: absolute;
+	inset: 1.25rem;
+	z-index: 20;
+	display: grid;
+	place-items: center;
+	gap: 0.9rem;
+	border-radius: 8px;
+	background: #11191d;
+	color: #f6f2ea;
+	pointer-events: none;
+}
+
+.levelLoading span {
+	width: 3.5rem;
+	aspect-ratio: 1;
+	border: 0.28rem solid rgba(246, 242, 234, 0.18);
+	border-top-color: #49c6e5;
+	border-radius: 999px;
+	animation: loadingSpin 900ms linear infinite;
+}
+
+.levelLoading strong {
+	font-size: 1.05rem;
+	animation: loadingPulse 1100ms ease-in-out infinite;
 }
 
 .imprintLink {

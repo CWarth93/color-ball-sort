@@ -8,20 +8,10 @@ import type { StoredLevel } from '../lib/levelTypes';
 
 const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: false });
 
-const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 3;
 const ballsPerColor = 3;
 
 const cloneJars = (jars: string[][]) => jars.map((jar) => [...jar]);
-
-const createFallbackLevel = () => [
-	[colors[0], colors[1], colors[2]],
-	[colors[1], colors[2], colors[3]],
-	[colors[2], colors[3], colors[4]],
-	[colors[3], colors[4], colors[0]],
-	[colors[4], colors[0], colors[1]],
-	[],
-];
 
 const isLevelSolved = (jars: string[][]) =>
 	jars.every((jar) => {
@@ -52,7 +42,7 @@ const loadRandomStoredLevel = async () => {
 };
 
 export default function HomePage() {
-	const [jars, setJars] = useState(() => createFallbackLevel());
+	const [jars, setJars] = useState<string[][]>([]);
 	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
 	const [moveBudget, setMoveBudget] = useState(0);
 	const [movesUsed, setMovesUsed] = useState(0);
@@ -62,9 +52,11 @@ export default function HomePage() {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
+	const isLoadingLevel = !boardReady && !showLevelComplete;
 	const isMoveLimitBlocking = boardReady && movesUsed >= moveBudget && !showLevelComplete;
 
 	const loadNextLevel = async () => {
+		setBoardReady(false);
 		const nextLevel = await loadRandomStoredLevel();
 
 		setJars(nextLevel.jars);
@@ -116,7 +108,7 @@ export default function HomePage() {
 	}, [dragState, jars]);
 
 	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
-		if (showLevelComplete || isMoveLimitBlocking || ballIndex !== jars[jarIndex].length - 1) {
+		if (!boardReady || showLevelComplete || isMoveLimitBlocking || ballIndex !== jars[jarIndex].length - 1) {
 			return;
 		}
 
@@ -177,7 +169,7 @@ export default function HomePage() {
 	};
 
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
-		if (showLevelComplete || isMoveLimitBlocking || sourceJar === null || sourceJar === targetJar) {
+		if (!boardReady || showLevelComplete || isMoveLimitBlocking || sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
 			setHoverJar(null);
 			setDragState(null);
@@ -228,13 +220,19 @@ export default function HomePage() {
 							data-testid="undo-turn"
 							type="button"
 							data-highlighted={isMoveLimitBlocking ? 'true' : 'false'}
-							disabled={turnHistory.length === 0 || showLevelComplete}
+							disabled={!boardReady || turnHistory.length === 0 || showLevelComplete}
 							onClick={undoTurn}
 						>
 							Undo
 						</button>
 						<div className="moveHud" data-blocked={isMoveLimitBlocking ? 'true' : 'false'} aria-label="Move counter">
-							Moves <strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
+							{boardReady ? (
+								<>
+									Moves <strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
+								</>
+							) : (
+								<span data-testid="moves-loading">Moves loading</span>
+							)}
 						</div>
 					</div>
 					<section
@@ -250,40 +248,50 @@ export default function HomePage() {
 							}
 						}}
 					>
-						<PhaserBoard jars={jars} activeJar={dragSourceJar} hoverJar={hoverJar} onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)} />
-						{jars.map((jar, jarIndex) => (
-							<button
-								className="gameJar"
-								type="button"
-								data-testid={`jar-${jarIndex}`}
-								data-jar-index={jarIndex}
-								data-empty={jar.length === 0 ? 'true' : 'false'}
-								data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
-								data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
-								key={`jar-${jarIndex}`}
-								aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
-								onPointerEnter={() => setHoverJar(jarIndex)}
-								onPointerMove={() => moveDragOverJar(jarIndex)}
-								onPointerLeave={() => setHoverJar((currentHoverJar) => (currentHoverJar === jarIndex ? null : currentHoverJar))}
-								onPointerUp={(event) => endDragOverJar(event, jarIndex)}
-							>
-								{jar.map((color, ballIndex) => (
-									<span
-										className="gameBall"
-										data-testid="ball"
-										data-color={color}
-										data-top={ballIndex === jar.length - 1 ? 'true' : 'false'}
-										draggable={ballIndex === jar.length - 1}
-										onDragStart={(event) => {
-											event.preventDefault();
-										}}
-										onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
-										style={{ backgroundColor: color, gridRow: jarCapacity - ballIndex }}
-										key={`${color}-${jarIndex}-${ballIndex}`}
-									/>
+						{boardReady && (
+							<>
+								<PhaserBoard jars={jars} activeJar={dragSourceJar} hoverJar={hoverJar} onBallDrop={(sourceJar, targetJar) => dropBall(targetJar, sourceJar)} />
+								{jars.map((jar, jarIndex) => (
+									<button
+										className="gameJar"
+										type="button"
+										data-testid={`jar-${jarIndex}`}
+										data-jar-index={jarIndex}
+										data-empty={jar.length === 0 ? 'true' : 'false'}
+										data-selected={dragSourceJar === jarIndex ? 'true' : 'false'}
+										data-hovered={hoverJar === jarIndex ? 'true' : 'false'}
+										key={`jar-${jarIndex}`}
+										aria-label={jar.length === 0 ? `Empty helper jar ${jarIndex + 1}` : `Jar ${jarIndex + 1}`}
+										onPointerEnter={() => setHoverJar(jarIndex)}
+										onPointerMove={() => moveDragOverJar(jarIndex)}
+										onPointerLeave={() => setHoverJar((currentHoverJar) => (currentHoverJar === jarIndex ? null : currentHoverJar))}
+										onPointerUp={(event) => endDragOverJar(event, jarIndex)}
+									>
+										{jar.map((color, ballIndex) => (
+											<span
+												className="gameBall"
+												data-testid="ball"
+												data-color={color}
+												data-top={ballIndex === jar.length - 1 ? 'true' : 'false'}
+												draggable={ballIndex === jar.length - 1}
+												onDragStart={(event) => {
+													event.preventDefault();
+												}}
+												onPointerDown={(event) => startBallDrag(event, jarIndex, ballIndex)}
+												style={{ backgroundColor: color, gridRow: jarCapacity - ballIndex }}
+												key={`${color}-${jarIndex}-${ballIndex}`}
+											/>
+										))}
+									</button>
 								))}
-							</button>
-						))}
+							</>
+						)}
+						{isLoadingLevel && (
+							<div className="levelLoading" data-testid="level-loading" aria-live="polite">
+								<span />
+								<strong>Loading level</strong>
+							</div>
+						)}
 						{showLevelComplete && (
 							<div className="levelSuccess" data-testid="level-complete" aria-live="polite">
 								<span />

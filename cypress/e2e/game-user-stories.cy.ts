@@ -5,7 +5,9 @@ const selectors = {
 	levelComplete: '[data-testid="level-complete"]',
 	movesUsed: '[data-testid="moves-used"]',
 	movesMax: '[data-testid="moves-max"]',
+	movesLoading: '[data-testid="moves-loading"]',
 	undoTurn: '[data-testid="undo-turn"]',
+	levelLoading: '[data-testid="level-loading"]',
 };
 
 const startGame = () => {
@@ -93,6 +95,46 @@ const spendMoves = (moveCount: number): void => {
 };
 
 describe('Color Ball Sort endless game', () => {
+	it('shows loading until the stored level and move count are ready', () => {
+		cy.intercept('GET', '/api/levels/random', {
+			delay: 700,
+			body: {
+				level: {
+					key: 'test-loading-level',
+					difficulty: 'easy',
+					minimumTurns: 8,
+					fastPathCount: 8,
+					jars: [
+						['#ff5a6f', '#ffd166', '#49c6e5'],
+						['#ffd166', '#49c6e5', '#65d46e'],
+						['#49c6e5', '#65d46e', '#a78bfa'],
+						['#65d46e', '#a78bfa', '#ff5a6f'],
+						['#a78bfa', '#ff5a6f', '#ffd166'],
+						[],
+					],
+					jarCapacity: 3,
+					ballsPerColor: 3,
+					colors: ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'],
+				},
+			},
+		}).as('loadLevel');
+
+		cy.visit('/');
+		cy.get(selectors.gameBoard).should('be.visible').and('have.attr', 'data-ready', 'false');
+		cy.get(selectors.levelLoading).should('be.visible').and('contain.text', 'Loading level');
+		cy.get(selectors.movesLoading).should('contain.text', 'Moves loading');
+		cy.get(selectors.movesUsed).should('not.exist');
+		cy.get(selectors.movesMax).should('not.exist');
+		cy.get(selectors.ball).should('not.exist');
+
+		cy.wait('@loadLevel');
+		cy.get(selectors.gameBoard).should('have.attr', 'data-ready', 'true');
+		cy.get(selectors.levelLoading).should('not.exist');
+		cy.get(selectors.movesUsed).should('contain.text', '0');
+		cy.get(selectors.movesMax).should('contain.text', '8');
+		cy.get(selectors.ball).should('have.length', 15);
+	});
+
 	it('starts directly on the endless game board', () => {
 		startGame();
 
