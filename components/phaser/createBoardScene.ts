@@ -170,20 +170,22 @@ export const createBoardScene = (Phaser: PhaserNamespace, initialState: BoardSce
 					const ballStyle = this.themeState.ballStyles[color];
 					const ballFill = ballStyle?.fill ?? color;
 					const ball = this.add.circle(ballX, ballY, ballRadius, Phaser.Display.Color.HexStringToColor(ballFill).color);
+					const shine = this.add.circle(ballX - 10, ballY - 12, 8, 0xffffff, 0.28);
+					const icon = ballStyle
+						? this.add
+								.image(ballX, ballY, getIconKey(this.themeState.id, color))
+								.setDisplaySize(ballRadius * 1.32, ballRadius * 1.32)
+								.setAlpha(1)
+						: null;
 
 					ball.setStrokeStyle(2, 0xffffff, 0.2);
-					this.add.circle(ballX - 10, ballY - 12, 8, 0xffffff, 0.28);
-					if (ballStyle) {
-						this.add
-							.image(ballX, ballY, getIconKey(this.themeState.id, color))
-							.setDisplaySize(ballRadius * 1.32, ballRadius * 1.32)
-							.setAlpha(1);
-					}
 
 					if (isTopBall) {
 						ball.setInteractive({ useHandCursor: true });
 						this.input.setDraggable(ball);
 						ball.setData('sourceJar', jarIndex);
+						ball.setData('shine', shine);
+						ball.setData('icon', icon);
 					}
 				});
 			});
@@ -193,6 +195,8 @@ export const createBoardScene = (Phaser: PhaserNamespace, initialState: BoardSce
 			this.input.off('dragend');
 			this.input.on('dragstart', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
 				const ball = gameObject as Phaser.GameObjects.Arc;
+				const shine = ball.getData('shine') as Phaser.GameObjects.Arc | null;
+				const icon = ball.getData('icon') as Phaser.GameObjects.Image | null;
 				const sourceJar = ball.getData('sourceJar') as number;
 				const jarContainer = this.jarContainers.get(sourceJar);
 
@@ -206,13 +210,19 @@ export const createBoardScene = (Phaser: PhaserNamespace, initialState: BoardSce
 					ease: 'Sine.easeOut',
 				});
 				ball.setDepth(100);
+				shine?.setDepth(101);
+				icon?.setDepth(102);
 				ball.setStrokeStyle(4, 0xffffff, 0.6);
 			});
 			this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
 				const ball = gameObject as Phaser.GameObjects.Arc;
+				const shine = ball.getData('shine') as Phaser.GameObjects.Arc | null;
+				const icon = ball.getData('icon') as Phaser.GameObjects.Image | null;
 				const targetJar = getJarIndexFromPointer(pointer.x, pointer.y);
 
 				ball.setPosition(pointer.x, pointer.y);
+				shine?.setPosition(pointer.x - 10, pointer.y - 12);
+				icon?.setPosition(pointer.x, pointer.y);
 				setJarHover(targetJar >= 0 ? targetJar : null);
 			});
 			this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
