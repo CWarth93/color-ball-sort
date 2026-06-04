@@ -24,6 +24,8 @@ const shuffle = <T,>(items: T[]) => {
 
 const hasMixedJar = (jars: string[][]) => jars.some((jar) => new Set(jar).size > 1);
 
+const cloneJars = (jars: string[][]) => jars.map((jar) => [...jar]);
+
 const createFallbackLevel = () => [
 	[colors[0], colors[1], colors[2]],
 	[colors[1], colors[2], colors[3]],
@@ -33,25 +35,84 @@ const createFallbackLevel = () => [
 	[],
 ];
 
+const calculateMinimumTurns = (jars: string[][]) => {
+	let mostBallsAlreadyInFinalJars = 0;
+
+	const assignColorToJar = (colorIndex: number, usedJarIndexes: Set<number>, keptBalls: number) => {
+		if (colorIndex === colors.length) {
+			mostBallsAlreadyInFinalJars = Math.max(mostBallsAlreadyInFinalJars, keptBalls);
+			return;
+		}
+
+		for (let jarIndex = 0; jarIndex < jarCount; jarIndex += 1) {
+			if (usedJarIndexes.has(jarIndex)) {
+				continue;
+			}
+
+			usedJarIndexes.add(jarIndex);
+			assignColorToJar(colorIndex + 1, usedJarIndexes, keptBalls + jars[jarIndex].filter((color) => color === colors[colorIndex]).length);
+			usedJarIndexes.delete(jarIndex);
+		}
+	};
+
+	assignColorToJar(0, new Set<number>(), 0);
+
+	return colors.length * ballsPerColor - mostBallsAlreadyInFinalJars;
+};
+
+const createSolvedLevel = () => [...colors.map((color) => Array.from({ length: ballsPerColor }, () => color)), []];
+
 const createLevel = () => {
-	const balls = colors.flatMap((color) => Array.from({ length: ballsPerColor }, () => color));
+	for (let attempt = 0; attempt < 100; attempt += 1) {
+		let nextJars = createSolvedLevel();
+		const seenStates = new Set([nextJars.map((jar) => jar.join(',')).join('|')]);
+		const targetTurns = 8 + Math.floor(Math.random() * 3);
 
-	for (let attempt = 0; attempt < 20; attempt += 1) {
-		const emptyJarIndex = Math.floor(Math.random() * jarCount);
-		const shuffledBalls = shuffle(balls);
-		const nextJars = Array.from({ length: jarCount }, () => [] as string[]);
-		const playableJarIndexes = Array.from({ length: jarCount }, (_, jarIndex) => jarIndex).filter((jarIndex) => jarIndex !== emptyJarIndex);
+		for (let turn = 0; turn < targetTurns; turn += 1) {
+			const candidates: string[][][] = [];
 
-		playableJarIndexes.forEach((jarIndex, playableIndex) => {
-			nextJars[jarIndex] = shuffledBalls.slice(playableIndex * ballsPerColor, playableIndex * ballsPerColor + ballsPerColor);
-		});
+			for (let sourceJar = 0; sourceJar < jarCount; sourceJar += 1) {
+				if (nextJars[sourceJar].length === 0) {
+					continue;
+				}
 
-		if (hasMixedJar(nextJars)) {
-			return nextJars;
+				for (let targetJar = 0; targetJar < jarCount; targetJar += 1) {
+					if (sourceJar === targetJar || nextJars[targetJar].length >= jarCapacity) {
+						continue;
+					}
+
+					const candidateJars = cloneJars(nextJars);
+					const movingBall = candidateJars[sourceJar].pop();
+
+					if (!movingBall) {
+						continue;
+					}
+
+					candidateJars[targetJar].push(movingBall);
+
+					const stateKey = candidateJars.map((jar) => jar.join(',')).join('|');
+					if (!seenStates.has(stateKey) && calculateMinimumTurns(candidateJars) === turn + 1) {
+						candidates.push(candidateJars);
+					}
+				}
+			}
+
+			if (candidates.length === 0) {
+				break;
+			}
+
+			nextJars = shuffle(candidates)[0];
+			seenStates.add(nextJars.map((jar) => jar.join(',')).join('|'));
+		}
+
+		const minimumTurns = calculateMinimumTurns(nextJars);
+		if (minimumTurns === targetTurns && hasMixedJar(nextJars)) {
+			return { jars: nextJars, minimumTurns };
 		}
 	}
 
-	return createFallbackLevel();
+	const fallbackJars = createFallbackLevel();
+	return { jars: fallbackJars, minimumTurns: calculateMinimumTurns(fallbackJars) };
 };
 
 const isLevelSolved = (jars: string[][]) =>
@@ -71,16 +132,27 @@ type DragState = {
 };
 
 export default function HomePage() {
-	const [jars, setJars] = useState(createFallbackLevel);
+	const [jars, setJars] = useState(() => createFallbackLevel());
+	const [initialJars, setInitialJars] = useState(() => createFallbackLevel());
+	const [turnHistory, setTurnHistory] = useState<string[][][]>([]);
+	const [moveBudget, setMoveBudget] = useState(() => calculateMinimumTurns(createFallbackLevel()));
+	const [movesUsed, setMovesUsed] = useState(0);
 	const [dragSourceJar, setDragSourceJar] = useState<number | null>(null);
 	const [hoverJar, setHoverJar] = useState<number | null>(null);
 	const [dragState, setDragState] = useState<DragState | null>(null);
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
+	const [showLevelFailed, setShowLevelFailed] = useState(false);
 
 	useEffect(() => {
-		setJars(createLevel());
+		const nextLevel = createLevel();
+
+		setInitialJars(cloneJars(nextLevel.jars));
+		setJars(nextLevel.jars);
+		setMoveBudget(nextLevel.minimumTurns);
+		setMovesUsed(0);
+		setTurnHistory([]);
 		setBoardReady(true);
 	}, []);
 
@@ -122,7 +194,7 @@ export default function HomePage() {
 	}, [dragState, jars]);
 
 	const startBallDrag = (event: ReactPointerEvent, jarIndex: number, ballIndex: number) => {
-		if (ballIndex !== jars[jarIndex].length - 1) {
+		if (showLevelComplete || showLevelFailed || ballIndex !== jars[jarIndex].length - 1) {
 			return;
 		}
 
@@ -163,13 +235,47 @@ export default function HomePage() {
 		setDragState(null);
 		setDragSourceJar(null);
 		window.setTimeout(() => {
-			setJars(createLevel());
+			const generatedLevel = createLevel();
+
+			setInitialJars(cloneJars(generatedLevel.jars));
+			setJars(generatedLevel.jars);
+			setMoveBudget(generatedLevel.minimumTurns);
+			setMovesUsed(0);
+			setTurnHistory([]);
 			setShowLevelComplete(false);
 		}, 1200);
 	};
 
+	const failLevel = () => {
+		setShowLevelFailed(true);
+		setHoverJar(null);
+		setDragState(null);
+		setDragSourceJar(null);
+		window.setTimeout(() => {
+			setJars(cloneJars(initialJars));
+			setMovesUsed(0);
+			setTurnHistory([]);
+			setShowLevelFailed(false);
+		}, 1800);
+	};
+
+	const undoTurn = () => {
+		if (showLevelComplete || showLevelFailed || turnHistory.length === 0) {
+			return;
+		}
+
+		const previousJars = turnHistory[turnHistory.length - 1];
+
+		setJars(cloneJars(previousJars));
+		setTurnHistory((currentHistory) => currentHistory.slice(0, -1));
+		setMovesUsed((currentMovesUsed) => Math.max(0, currentMovesUsed - 1));
+		setDragSourceJar(null);
+		setHoverJar(null);
+		setDragState(null);
+	};
+
 	const dropBall = (targetJar: number, sourceJar = dragSourceJar) => {
-		if (showLevelComplete || sourceJar === null || sourceJar === targetJar) {
+		if (showLevelComplete || showLevelFailed || sourceJar === null || sourceJar === targetJar) {
 			setDragSourceJar(null);
 			setHoverJar(null);
 			setDragState(null);
@@ -183,23 +289,31 @@ export default function HomePage() {
 			return;
 		}
 
-		setJars((currentJars) => {
-			const nextJars = currentJars.map((jar) => [...jar]);
-			const movingBall = nextJars[sourceJar].pop();
+		const nextJars = cloneJars(jars);
+		const movingBall = nextJars[sourceJar].pop();
 
-			if (!movingBall) {
-				return currentJars;
-			}
+		if (!movingBall) {
+			return;
+		}
 
-			nextJars[targetJar].push(movingBall);
-			if (isLevelSolved(nextJars)) {
-				completeLevel();
-			}
-			return nextJars;
-		});
+		nextJars[targetJar].push(movingBall);
+		const nextMovesUsed = movesUsed + 1;
+
+		setTurnHistory((currentHistory) => [...currentHistory, cloneJars(jars)]);
+		setMovesUsed(nextMovesUsed);
+		setJars(nextJars);
 		setDragSourceJar(null);
 		setHoverJar(null);
 		setDragState(null);
+
+		if (nextMovesUsed > moveBudget) {
+			failLevel();
+			return;
+		}
+
+		if (isLevelSolved(nextJars)) {
+			completeLevel();
+		}
 	};
 
 	return (
@@ -210,6 +324,20 @@ export default function HomePage() {
 			</Head>
 			<main className="gameScreen">
 				<h1 className="gameTitle">Color Ball Sort</h1>
+				<div className="moveHud" aria-label="Move counter">
+					<span>
+						Moves <strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
+					</span>
+					<button
+						className="undoButton"
+						data-testid="undo-turn"
+						type="button"
+						disabled={turnHistory.length === 0 || showLevelComplete || showLevelFailed}
+						onClick={undoTurn}
+					>
+						Undo
+					</button>
+				</div>
 				<div className="gameStage">
 					<section
 						className="gameBoard"
@@ -263,6 +391,14 @@ export default function HomePage() {
 								<span />
 								<span />
 								<strong>Level complete</strong>
+							</div>
+						)}
+						{showLevelFailed && (
+							<div className="levelFailure" data-testid="level-failed" aria-live="polite">
+								<span />
+								<span />
+								<span />
+								<strong>Level failed</strong>
 							</div>
 						)}
 						{dragState && <span className="dragGhost" style={{ backgroundColor: dragState.color, left: dragState.x, top: dragState.y }} aria-hidden="true" />}
