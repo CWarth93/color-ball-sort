@@ -39,6 +39,18 @@ const readBoardSignature = () =>
 			[...jars].map((jar) => [...jar.querySelectorAll('[data-testid="ball"]')].map((ball) => ball.getAttribute('data-color')).join(',')).join('|')
 		);
 
+const findAvailableMove = () =>
+	cy.get('[data-testid^="jar-"]').then((jars) => {
+		const jarElements = [...jars];
+		const sourceJar = jarElements.findIndex((jar) => jar.querySelectorAll('[data-testid="ball"]').length > 0);
+		const targetJar = jarElements.findIndex((jar, jarIndex) => jarIndex !== sourceJar && jar.querySelectorAll('[data-testid="ball"]').length < 4);
+
+		expect(sourceJar).to.be.greaterThan(-1);
+		expect(targetJar).to.be.greaterThan(-1);
+
+		return { sourceJar, targetJar };
+	});
+
 const dragTopBallToJar = (sourceJar: number, targetJar: number) => {
 	cy.get(selectors.jar(sourceJar))
 		.find(`${selectors.ball}[data-top="true"]`)
@@ -101,24 +113,39 @@ describe('Color Ball Sort user stories', () => {
 
 		cy.get('[data-testid^="jar-"]').should('have.length', 6);
 		cy.get('[data-testid^="jar-"][data-empty="true"]').should('have.length', 1);
+		cy.get('[data-testid^="jar-"]').each((jar) => {
+			expect(jar.find('[data-testid="ball"]').length).to.be.at.most(4);
+		});
 		cy.get(selectors.ball).then((balls) => {
 			const colors = new Set([...balls].map((ball) => ball.getAttribute('data-color')));
 
 			expect(colors.size).to.equal(5);
-			expect(balls.length).to.be.lessThan(21);
+			expect(balls.length).to.equal(15);
+		});
+		readBoardSignature().should((signature) => {
+			const jars = signature.split('|');
+			const mixedJars = jars.filter((jar) => {
+				const jarColors = jar.split(',').filter(Boolean);
+
+				return new Set(jarColors).size > 1;
+			});
+
+			expect(mixedJars.length).to.be.greaterThan(0);
 		});
 	});
 
 	it('moves the top ball to any jar with free space', () => {
 		startSprint();
 
-		cy.get(selectors.jar(1)).find(selectors.ball).last().as('topBall');
-		cy.get('@topBall').invoke('attr', 'data-color').as('movedColor');
+		findAvailableMove().then(({ sourceJar, targetJar }) => {
+			cy.get(selectors.jar(sourceJar))
+				.find(`${selectors.ball}[data-top="true"]`)
+				.then((topBall) => {
+					const movedColor = topBall.attr('data-color');
 
-		dragTopBallToJar(1, 5);
-
-		cy.get<string>('@movedColor').then((movedColor) => {
-			cy.get(selectors.jar(5)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
+					dragTopBallToJar(sourceJar, targetJar);
+					cy.get(selectors.jar(targetJar)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
+				});
 		});
 		cy.get(selectors.moves).should('contain.text', '1');
 	});
@@ -126,35 +153,37 @@ describe('Color Ball Sort user stories', () => {
 	it('keeps the dragged ball attached to mouse input', () => {
 		startSprint();
 
-		cy.get(selectors.jar(1))
-			.find(`${selectors.ball}[data-top="true"]`)
-			.then(($ball) => {
-				const rect = $ball[0].getBoundingClientRect();
+		findAvailableMove().then(({ sourceJar, targetJar }) => {
+			cy.get(selectors.jar(sourceJar))
+				.find(`${selectors.ball}[data-top="true"]`)
+				.then(($ball) => {
+					const rect = $ball[0].getBoundingClientRect();
 
-				cy.wrap($ball).trigger('pointerdown', {
-					pointerId: 1,
-					pointerType: 'mouse',
-					button: 0,
-					buttons: 1,
-					clientX: rect.left + rect.width / 2,
-					clientY: rect.top + rect.height / 2,
+					cy.wrap($ball).trigger('pointerdown', {
+						pointerId: 1,
+						pointerType: 'mouse',
+						button: 0,
+						buttons: 1,
+						clientX: rect.left + rect.width / 2,
+						clientY: rect.top + rect.height / 2,
+					});
 				});
+			cy.get(selectors.jar(targetJar)).then(($jar) => {
+				const rect = $jar[0].getBoundingClientRect();
+				const clientX = rect.left + rect.width / 2;
+				const clientY = rect.top + rect.height / 2;
+
+				cy.wrap($jar).trigger('pointermove', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1, clientX, clientY });
+				cy.get('.dragGhost')
+					.should('exist')
+					.and(($ghost) => {
+						const ghostRect = $ghost[0].getBoundingClientRect();
+
+						expect(ghostRect.left + ghostRect.width / 2).to.be.closeTo(clientX, 2);
+						expect(ghostRect.top + ghostRect.height / 2).to.be.closeTo(clientY, 2);
+					});
+				cy.wrap($jar).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX, clientY });
 			});
-		cy.get(selectors.jar(5)).then(($jar) => {
-			const rect = $jar[0].getBoundingClientRect();
-			const clientX = rect.left + rect.width / 2;
-			const clientY = rect.top + rect.height / 2;
-
-			cy.wrap($jar).trigger('pointermove', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1, clientX, clientY });
-			cy.get('.dragGhost')
-				.should('exist')
-				.and(($ghost) => {
-					const ghostRect = $ghost[0].getBoundingClientRect();
-
-					expect(ghostRect.left + ghostRect.width / 2).to.be.closeTo(clientX, 2);
-					expect(ghostRect.top + ghostRect.height / 2).to.be.closeTo(clientY, 2);
-				});
-			cy.wrap($jar).trigger('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, buttons: 0, clientX, clientY });
 		});
 		cy.get(selectors.moves).should('contain.text', '1');
 	});
@@ -163,7 +192,9 @@ describe('Color Ball Sort user stories', () => {
 		startSprint();
 
 		readBoardSignature().as('initialSignature');
-		dragTopBallOutsideJar(1);
+		findAvailableMove().then(({ sourceJar }) => {
+			dragTopBallOutsideJar(sourceJar);
+		});
 
 		cy.get<string>('@initialSignature').then((initialSignature) => {
 			readBoardSignature().should((nextSignature) => {
@@ -173,36 +204,40 @@ describe('Color Ball Sort user stories', () => {
 		cy.get(selectors.moves).should('contain.text', '0');
 	});
 
-	it('keeps the global timer running when a completed level advances instantly', () => {
+	it('keeps the global timer running while moves are made', () => {
 		startSprint({ useClock: true });
 
 		cy.tick(12_000);
 		cy.get(selectors.timer).should('contain.text', '01:48');
 
 		readBoardSignature().then((initialSignature) => {
-			dragTopBallToJar(0, 5);
-			cy.get(selectors.levelComplete).should('be.visible');
-			cy.get(selectors.completedLevels).should('contain.text', '1');
+			findAvailableMove().then(({ sourceJar, targetJar }) => {
+				dragTopBallToJar(sourceJar, targetJar);
+			});
+			cy.get(selectors.completedLevels).should('contain.text', '0');
 			cy.get(selectors.timer).should('contain.text', '01:48');
-			cy.get(selectors.gameBoard).should('have.attr', 'data-level', '2');
 			readBoardSignature().should((nextSignature) => {
 				expect(nextSignature).not.to.equal(initialSignature);
 			});
 		});
 	});
 
-	it('allows dragging again after a completed level creates the next board', () => {
+	it('allows repeated dragging on a randomized board', () => {
 		startSprint();
 
-		dragTopBallToJar(0, 5);
-		cy.get(selectors.levelComplete).should('be.visible');
-		cy.get(selectors.gameBoard).should('have.attr', 'data-level', '2');
+		findAvailableMove().then(({ sourceJar, targetJar }) => {
+			dragTopBallToJar(sourceJar, targetJar);
+		});
 
-		cy.get(selectors.jar(1)).find(selectors.ball).last().invoke('attr', 'data-color').as('movedColor');
-		dragTopBallToJar(1, 5);
+		findAvailableMove().then(({ sourceJar, targetJar }) => {
+			cy.get(selectors.jar(sourceJar))
+				.find(`${selectors.ball}[data-top="true"]`)
+				.then((topBall) => {
+					const movedColor = topBall.attr('data-color');
 
-		cy.get<string>('@movedColor').then((movedColor) => {
-			cy.get(selectors.jar(5)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
+					dragTopBallToJar(sourceJar, targetJar);
+					cy.get(selectors.jar(targetJar)).find(selectors.ball).last().should('have.attr', 'data-color', movedColor);
+				});
 		});
 		cy.get(selectors.moves).should('contain.text', '2');
 	});
@@ -251,7 +286,9 @@ describe('Color Ball Sort user stories', () => {
 			expect(rect.height).to.be.greaterThan(120);
 		});
 
-		dragTopBallToJar(0, 5);
+		findAvailableMove().then(({ sourceJar, targetJar }) => {
+			dragTopBallToJar(sourceJar, targetJar);
+		});
 		cy.get(selectors.moves).should('contain.text', '1');
 	});
 

@@ -10,18 +10,47 @@ const PhaserBoard = dynamic(() => import('../components/PhaserBoard'), { ssr: fa
 
 const colors = ['#ff5a6f', '#ffd166', '#49c6e5', '#65d46e', '#a78bfa'];
 const jarCapacity = 4;
+const ballsPerColor = 3;
+const jarCount = 6;
 const sprintSeconds = 120;
 
-const createLevel = (levelNumber = 1) => {
-	const offset = (levelNumber - 1) % colors.length;
-	const levelColors = colors.map((_, index) => colors[(index + offset) % colors.length]);
+const shuffle = <T,>(items: T[]) => {
+	const shuffledItems = [...items];
+
+	for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
+		const swapIndex = Math.floor(Math.random() * (index + 1));
+		[shuffledItems[index], shuffledItems[swapIndex]] = [shuffledItems[swapIndex], shuffledItems[index]];
+	}
+
+	return shuffledItems;
+};
+
+const hasMixedJar = (jars: string[][]) => jars.some((jar) => new Set(jar).size > 1);
+
+const createLevel = () => {
+	const balls = colors.flatMap((color) => Array.from({ length: ballsPerColor }, () => color));
+
+	for (let attempt = 0; attempt < 20; attempt += 1) {
+		const emptyJarIndex = Math.floor(Math.random() * jarCount);
+		const shuffledBalls = shuffle(balls);
+		const nextJars = Array.from({ length: jarCount }, () => [] as string[]);
+		const playableJarIndexes = Array.from({ length: jarCount }, (_, jarIndex) => jarIndex).filter((jarIndex) => jarIndex !== emptyJarIndex);
+
+		playableJarIndexes.forEach((jarIndex, playableIndex) => {
+			nextJars[jarIndex] = shuffledBalls.slice(playableIndex * ballsPerColor, playableIndex * ballsPerColor + ballsPerColor);
+		});
+
+		if (hasMixedJar(nextJars)) {
+			return nextJars;
+		}
+	}
 
 	return [
-		[levelColors[1], levelColors[1], levelColors[0]],
-		[levelColors[0], levelColors[0]],
-		[levelColors[2], levelColors[2], levelColors[2]],
-		[levelColors[3], levelColors[3], levelColors[3]],
-		[levelColors[4], levelColors[4], levelColors[4]],
+		[colors[0], colors[1], colors[2]],
+		[colors[1], colors[2], colors[3]],
+		[colors[2], colors[3], colors[4]],
+		[colors[3], colors[4], colors[0]],
+		[colors[4], colors[0], colors[1]],
 		[],
 	];
 };
@@ -189,7 +218,7 @@ export default function HomePage() {
 				setHoverJar(null);
 				setDragState(null);
 				setDragSourceJar(null);
-				return createLevel(nextLevel);
+				return createLevel();
 			}
 			return nextJars;
 		});
