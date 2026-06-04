@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import type { GameTheme } from '../lib/themes';
+import { themes } from '../lib/themes';
 
 type PhaserBoardProps = {
 	jars: string[][];
@@ -67,8 +68,10 @@ export default function PhaserBoard({ jars, activeJar, hoverJar, onBallDrop, the
 				jarShapes = new Map<number, Phaser.GameObjects.Graphics>();
 
 				preload() {
-					Object.entries(this.themeState.ballStyles).forEach(([color, ballStyle]) => {
-						this.load.image(getIconKey(this.themeState.id, color), ballStyle.icon);
+					themes.forEach((availableTheme) => {
+						Object.entries(availableTheme.ballStyles).forEach(([color, ballStyle]) => {
+							this.load.image(getIconKey(availableTheme.id, color), ballStyle.icon);
+						});
 					});
 				}
 
