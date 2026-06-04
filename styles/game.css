@@ -205,6 +205,31 @@
 	animation: loadingPulse 1100ms ease-in-out infinite;
 }
 
+.levelError {
+	position: absolute;
+	inset: var(--board-padding);
+	z-index: 20;
+	display: grid;
+	align-content: center;
+	place-items: center;
+	gap: 0.85rem;
+	padding: 1rem;
+	border-radius: 8px;
+	background: var(--board-bg);
+	color: var(--page-text);
+	text-align: center;
+}
+
+.levelError strong {
+	font-size: 1.15rem;
+}
+
+.levelError span {
+	max-width: 24rem;
+	color: var(--muted-text);
+	font-size: 0.95rem;
+}
+
 .imprintLink {
 	position: fixed;
 	right: 1rem;

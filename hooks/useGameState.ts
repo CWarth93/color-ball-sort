@@ -41,7 +41,8 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 	const [level, setLevel] = useState(1);
 	const [boardReady, setBoardReady] = useState(false);
 	const [showLevelComplete, setShowLevelComplete] = useState(false);
-	const isLoadingLevel = !boardReady && !showLevelComplete;
+	const [levelError, setLevelError] = useState<string | null>(null);
+	const isLoadingLevel = !boardReady && !showLevelComplete && !levelError;
 	const isMoveLimitBlocking = boardReady && movesUsed >= moveBudget && !showLevelComplete;
 
 	const clearDragState = useCallback(() => {
@@ -52,18 +53,31 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 
 	const loadNextLevel = useCallback(async () => {
 		setBoardReady(false);
-		const nextLevel = await loadRandomStoredLevel();
-		const loadedJars = cloneJars(nextLevel.jars);
+		setLevelError(null);
+		try {
+			const nextLevel = await loadRandomStoredLevel();
+			const loadedJars = cloneJars(nextLevel.jars);
 
-		setJars(loadedJars);
-		setInitialJars(cloneJars(loadedJars));
-		setMoveBudget(nextLevel.minimumTurns);
-		setMovesUsed(0);
-		setTurnHistory([]);
-		setDragSourceJar(null);
-		setHoverJar(null);
-		setDragState(null);
-		setBoardReady(true);
+			setJars(loadedJars);
+			setInitialJars(cloneJars(loadedJars));
+			setMoveBudget(nextLevel.minimumTurns);
+			setMovesUsed(0);
+			setTurnHistory([]);
+			setDragSourceJar(null);
+			setHoverJar(null);
+			setDragState(null);
+			setBoardReady(true);
+		} catch (error) {
+			setJars([]);
+			setInitialJars([]);
+			setMoveBudget(0);
+			setMovesUsed(0);
+			setTurnHistory([]);
+			setDragSourceJar(null);
+			setHoverJar(null);
+			setDragState(null);
+			setLevelError(error instanceof Error ? error.message : 'Unable to load a level');
+		}
 	}, []);
 
 	useEffect(() => {
@@ -205,7 +219,7 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 	};
 
 	const skipLevel = () => {
-		if (!boardReady || showLevelComplete) {
+		if ((!boardReady && !levelError) || showLevelComplete) {
 			return;
 		}
 
@@ -225,6 +239,8 @@ export const useGameState = ({ activeTheme }: UseGameStateOptions) => {
 		isMoveLimitBlocking,
 		jars,
 		level,
+		levelError,
+		loadNextLevel,
 		moveBudget,
 		moveDragOverJar,
 		movesUsed,

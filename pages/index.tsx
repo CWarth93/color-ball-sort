@@ -27,6 +27,8 @@ export default function HomePage() {
 		isMoveLimitBlocking,
 		jars,
 		level,
+		levelError,
+		loadNextLevel,
 		moveBudget,
 		moveDragOverJar,
 		movesUsed,
@@ -73,7 +75,7 @@ export default function HomePage() {
 									<strong data-testid="moves-used">{movesUsed}</strong>/<strong data-testid="moves-max">{moveBudget}</strong>
 								</>
 							) : (
-								<span data-testid="moves-loading">Loading</span>
+								<span data-testid="moves-loading">{levelError ? 'Error' : 'Loading'}</span>
 							)}
 						</div>
 					</div>
@@ -143,6 +145,15 @@ export default function HomePage() {
 							<div className="levelLoading" data-testid="level-loading" aria-live="polite">
 								<span />
 								<strong>Loading level</strong>
+							</div>
+						)}
+						{levelError && (
+							<div className="levelError" data-testid="level-error" aria-live="polite">
+								<strong>Level unavailable</strong>
+								<span>{levelError}</span>
+								<button className="actionButton" data-testid="retry-level" type="button" onClick={() => void loadNextLevel()}>
+									Retry
+								</button>
 							</div>
 						)}
 						{showLevelComplete && (
