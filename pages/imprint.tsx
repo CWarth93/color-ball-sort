@@ -19,9 +19,9 @@ export default function ImprintPage() {
 						Christopher Warth
 						<br />
 						<br />
-						Ziegelstra&szlig;e 3
+						Louisenstrasse 54
 						<br />
-						01069 Dresden
+						01099 Dresden
 					</p>
 					<p>
 						Telefon: 015255280055
